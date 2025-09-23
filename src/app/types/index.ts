@@ -14,3 +14,4 @@ export * from './forms';
 export * from './api';
 export * from './utils';
 export * from './params'
+export * from './passwords'
