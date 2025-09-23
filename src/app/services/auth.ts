@@ -10,7 +10,7 @@ import type {
   ResetPasswordRequest,
   ResetPasswordResponse,
   RefreshTokenRequest,
-  RefreshTokenResponse
+  RefreshTokenResponse,
 } from '../types';
 
 export interface AuthResponse {
@@ -42,6 +42,22 @@ class AuthService {
 
   async refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<RefreshTokenResponse>> {
     const response = await apiClient.post('/api/auth/refresh-token', data);
+    return response.data;
+  }
+
+  // Métodos para autenticação social
+  initiateGoogleAuth(): void {
+    window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/auth/google`;
+  }
+
+  initiateDiscordAuth(): void {
+    window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/auth/discord`;
+  }
+
+
+  // Método para obter o usuário atual
+  async getCurrentUser(): Promise<ApiResponse<User>> {
+    const response = await apiClient.get('/api/auth/me');
     return response.data;
   }
 

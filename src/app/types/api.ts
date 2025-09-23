@@ -1,3 +1,4 @@
+import type { User } from "./user";
 
 export interface PaginationParams {
   page?: number;
@@ -26,3 +27,9 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
+export interface SocialAuthCallbackResponse {
+  user: User;
+  token: string;
+  refreshToken?: string;
+  isNewUser: boolean; // Indica se é um novo usuário ou login existente
+}

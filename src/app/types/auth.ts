@@ -9,3 +9,11 @@ export interface SignUp {
   password: string;
   slug?: string; 
 }
+
+
+export interface Account {
+  id: string;
+  userId: string;
+  provider: 'google' | 'discord' | string;
+  providerAccountId: string;
+}
