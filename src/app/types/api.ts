@@ -27,6 +27,12 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
+export interface AuthResponse {
+  success: boolean;
+  data?: User;
+  message?: string;
+  errors?: string[];
+}
 export interface SocialAuthCallbackResponse {
   user: User;
   token: string;

@@ -17,3 +17,4 @@ export interface Account {
   provider: 'google' | 'discord' | string;
   providerAccountId: string;
 }
+

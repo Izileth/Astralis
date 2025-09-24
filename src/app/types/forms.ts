@@ -11,11 +11,13 @@ export interface CreateUser {
 
 export interface UpdateUser {
   name?: string;
-  slug?: string;
+  email?: string;
+  password?: string;
   avatarUrl?: string;
   bannerUrl?: string;
   bio?: string;
   status?: string;
+  verified?: boolean;
 }
 
 export interface CreatePost {

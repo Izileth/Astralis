@@ -35,7 +35,7 @@ class ApiClient {
   constructor(config?: ApiClientConfig) {
     // Configurações padrão
     this.config = {
-      baseURL: config?.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5656',
+      baseURL: config?.baseURL ||  'http://localhost:3000',
       timeout: config?.timeout || 30000,
       withCredentials: config?.withCredentials ?? true,
       enableRetry: config?.enableRetry ?? true,

@@ -26,8 +26,6 @@ export interface User {
   following?: Follow[];
   followers?: Follow[];
   socialLinks?: SocialLink[];
-
-   
   accounts?: Account[];
   
   // Campos calculados úteis no frontend

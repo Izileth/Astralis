@@ -1,47 +1,56 @@
-
 import apiClient from './api';
-import type { 
-  SignIn, 
-  SignUp, 
-  User, 
-  ApiResponse,
-  ForgotPasswordRequest,
-  ForgotPasswordResponse,
+import type {
+  SignIn,
+  SignUp,
+  User,
+  ForgotPasswordRequest,  
   ResetPasswordRequest,
-  ResetPasswordResponse,
   RefreshTokenRequest,
-  RefreshTokenResponse,
 } from '../types';
 
+// Interface alinhada com a resposta do backend
 export interface AuthResponse {
   user: User;
-  token: string;
-  refreshToken?: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+// Interface para respostas de redefinição de senha (baseada no backend)
+export interface PasswordResetResponse {
+  message: string;
+  resetToken?: string; // Apenas para desenvolvimento/teste
 }
 
 class AuthService {
-  async register(data: SignUp): Promise<ApiResponse<AuthResponse>> {
+  async register(data: SignUp): Promise<AuthResponse> {
     const response = await apiClient.post('/api/auth/register', data);
+    console.log('Dados de Registro -', data);
+    // Backend retorna diretamente { user, accessToken, refreshToken }
     return response.data;
   }
 
-  async login(data: SignIn): Promise<ApiResponse<AuthResponse>> {
+  async login(data: SignIn): Promise<AuthResponse> {
     const response = await apiClient.post('/api/auth/login', data);
+    console.log('Dados de Login -', data);
+    // Backend retorna diretamente { user, accessToken, refreshToken }
     return response.data;
   }
 
-  async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse<ForgotPasswordResponse>> {
+  async forgotPassword(data: ForgotPasswordRequest): Promise<PasswordResetResponse> {
     const response = await apiClient.post('/api/auth/forgot-password', data);
+    // Backend retorna { message, resetToken? }
     return response.data;
   }
 
-  async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<ResetPasswordResponse>> {
+  async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
     const response = await apiClient.post('/api/auth/reset-password', data);
+    // Backend retorna { message: "Senha redefinida com sucesso." }
     return response.data;
   }
 
-  async refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<RefreshTokenResponse>> {
+  async refreshToken(data: RefreshTokenRequest): Promise<{ accessToken: string }> {
     const response = await apiClient.post('/api/auth/refresh-token', data);
+    // Backend retorna { accessToken }
     return response.data;
   }
 
@@ -54,10 +63,31 @@ class AuthService {
     window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/auth/discord`;
   }
 
+  async socialAuthCallback(params: URLSearchParams): Promise<AuthResponse> {
+    const provider = params.get('provider');
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+
+    if (error) {
+      throw new Error(`Social login failed: ${error}`);
+    }
+
+    if (!provider || !code) {
+      throw new Error('Missing provider or code for social login.');
+    }
+
+    const response = await apiClient.get(`/api/auth/social/callback`, {
+      params: { provider, code, state },
+    });
+
+    return response.data;
+  }
 
   // Método para obter o usuário atual
-  async getCurrentUser(): Promise<ApiResponse<User>> {
+  async getCurrentUser(): Promise<User> {
     const response = await apiClient.get('/api/auth/me');
+    // Assumindo que retorna diretamente o usuário
     return response.data;
   }
 
@@ -86,6 +116,25 @@ class AuthService {
     localStorage.setItem('access_token', accessToken);
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken);
+    }
+  }
+
+  // Método para fazer refresh do token automaticamente
+  async tryRefreshToken(): Promise<string | null> {
+    try {
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) return null;
+
+      const response = await this.refreshToken({ refreshToken });
+      const newAccessToken = response.accessToken;
+      
+      // Atualiza apenas o access token
+      this.setTokens(newAccessToken, refreshToken);
+      return newAccessToken;
+    } catch (error) {
+      // Se falhar, remove os tokens
+      this.logout();
+      return null;
     }
   }
 }
