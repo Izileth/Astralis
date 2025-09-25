@@ -16,8 +16,8 @@ import {
 
 import useAuthStore from "../store/auth"
 import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user"
-
 import type { User, UpdateUser, CreateSocialLink } from "../types"
+import { FileUpload} from "../components/Common/FileUpload";
 
 // Enhanced Edit Profile Dialog
 function EditProfileDialog({
@@ -85,25 +85,13 @@ function EditProfileDialog({
           </div>
 
           <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Avatar URL</Text>
-            <TextField.Root
-              value={formData.avatarUrl || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, avatarUrl: e.target.value }))}
-              placeholder="https://example.com/avatar.jpg"
-              type="url"
-              className="border-thin border-border focus:border-accent transition-colors"
-            />
+            <Text className="text-sm font-medium text-foreground">Avatar</Text>
+            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, avatarUrl: url }))} variant="avatar" />
           </div>
 
           <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Banner URL</Text>
-            <TextField.Root
-              value={formData.bannerUrl || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, bannerUrl: e.target.value }))}
-              placeholder="https://example.com/banner.jpg"
-              type="url"
-              className="border-thin border-border focus:border-accent transition-colors"
-            />
+            <Text className="text-sm font-medium text-foreground">Banner</Text>
+            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))} variant="banner" />
           </div>
 
           <div className="space-y-2">
