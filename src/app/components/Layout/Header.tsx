@@ -47,7 +47,7 @@ export function Header() {
         <Flex align="center" gap="3" display={{ initial: 'none', sm: 'flex' }}>
           {isAuthenticated ? (
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger>
+              <DropdownMenu.Trigger>  
                 <Button variant="ghost" radius="full">
                   <Avatar
                     size="2"
@@ -65,8 +65,8 @@ export function Header() {
             </DropdownMenu.Root>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => navigate('/login')}>Entrar</Button>
-              <Button onClick={() => navigate('/register')}>Registrar</Button>
+              <Button color='red' variant="ghost" onClick={() => navigate('/login')}>Entrar</Button>
+              <Button color='red'  onClick={() => navigate('/register')}>Registrar</Button>
             </>
           )}
         </Flex>

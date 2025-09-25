@@ -1,24 +1,16 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { usePosts, usePagination } from '../../hooks/post';
 import { PostCard } from './PostCard';
 import { Grid, Flex, Button, Text, Spinner, Box, Heading } from '@radix-ui/themes';
-import type { PostsParams } from '../../types';
 
 interface PostListProps {
   isOwner?: boolean;
 }
 
 export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
-  const params: PostsParams = useMemo(() => ({
-    published: true,
-    limit: 9, // 9 posts para uma grade 3x3
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  }), []);
-
 
   // Busca os posts publicados, ordenados pelos mais recentes
-  const { posts, loading, error, refetch } = usePosts(params);
+  const { posts, loading, error, refetch } = usePosts();
 
   console.log(posts, error)
 

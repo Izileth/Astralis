@@ -1,51 +1,35 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import type React from "react"
+
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { Text, Button, Avatar, Badge, Tabs, Dialog, TextField, TextArea, AlertDialog, Select } from "@radix-ui/themes"
 import {
-  Card,
-  Flex,
-  Box,
-  Heading,
-  Text,
-  Button,
-  Avatar,
-  Separator,
-  Badge,
-  Tabs,
-  Dialog,
-  TextField,
-  TextArea,
-  IconButton,
-  AlertDialog,
-  Select,
-  Spinner
-} from "@radix-ui/themes";
-import { 
-  Pencil1Icon, 
-  PlusIcon, 
-  TrashIcon, 
+  Pencil1Icon,
+  PlusIcon,
+  TrashIcon,
   ExternalLinkIcon,
   PersonIcon,
   HeartIcon,
-  ChatBubbleIcon
-} from "@radix-ui/react-icons";
+  ChatBubbleIcon,
+} from "@radix-ui/react-icons"
 
-import useAuthStore from "../store/auth";
-import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user";
-import { useAuthorPosts } from "../hooks/post";
-import { PostList } from "../components/Post/PostList";
-import type { User, UpdateUser, CreateSocialLink } from "../types";
+import useAuthStore from "../store/auth"
+import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user"
 
-// Componente para editar perfil
-function EditProfileDialog({ 
-  open, 
-  onClose, 
-  user, 
-  onUpdate 
-}: { 
-  open: boolean; 
-  onClose: () => void; 
-  user: User; 
-  onUpdate: (data: UpdateUser) => Promise<void>;
+import type { User, UpdateUser, CreateSocialLink } from "../types"
+
+// Enhanced Edit Profile Dialog
+function EditProfileDialog({
+  open,
+  onClose,
+  user,
+  onUpdate,
+}: {
+  open: boolean
+  onClose: () => void
+  user: User
+  onUpdate: (data: UpdateUser) => Promise<void>
 }) {
   const [formData, setFormData] = useState<UpdateUser>({
     name: user.name,
@@ -53,539 +37,658 @@ function EditProfileDialog({
     avatarUrl: user.avatarUrl || "",
     bannerUrl: user.bannerUrl || "",
     status: user.status || "active",
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  })
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
     try {
-      await onUpdate(formData);
-      onClose();
+      await onUpdate(formData)
+      onClose()
     } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
+      console.error("Erro ao atualizar perfil:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
-      <Dialog.Content style={{ maxWidth: 500 }}>
-        <Dialog.Title>Editar Perfil</Dialog.Title>
-        <Dialog.Description size="2" mb="4">
-          Atualize suas informações pessoais
+      <Dialog.Content className="max-w-lg bg-card border border-border shadow-refined-lg">
+        <Dialog.Title className="text-2xl font-light text-foreground heading-refined">Edit Profile</Dialog.Title>
+        <Dialog.Description className="text-muted-foreground text-refined mb-6">
+          Update your personal information with refined elegance
         </Dialog.Description>
 
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="4">
-            <Box>
-              <Text as="label" size="2" weight="bold">Nome</Text>
-              <TextField.Root
-                value={formData.name || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Seu nome"
-                required
-              />
-            </Box>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Name</Text>
+            <TextField.Root
+              value={formData.name || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="Your elegant name"
+              className="border-thin border-border focus:border-accent transition-colors"
+              required
+            />
+          </div>
 
-            <Box>
-              <Text as="label" size="2" weight="bold">Bio</Text>
-              <TextArea
-                value={formData.bio || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder="Conte um pouco sobre você..."
-                rows={3}
-              />
-            </Box>
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Bio</Text>
+            <TextArea
+              value={formData.bio || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
+              placeholder="Share your story with the world..."
+              rows={3}
+              className="border-thin border-border focus:border-accent transition-colors text-refined"
+            />
+          </div>
 
-            <Box>
-              <Text as="label" size="2" weight="bold">URL do Avatar</Text>
-              <TextField.Root
-                value={formData.avatarUrl || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, avatarUrl: e.target.value }))}
-                placeholder="https://exemplo.com/avatar.jpg"
-                type="url"
-              />
-            </Box>
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Avatar URL</Text>
+            <TextField.Root
+              value={formData.avatarUrl || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, avatarUrl: e.target.value }))}
+              placeholder="https://example.com/avatar.jpg"
+              type="url"
+              className="border-thin border-border focus:border-accent transition-colors"
+            />
+          </div>
 
-            <Box>
-              <Text as="label" size="2" weight="bold">URL do Banner</Text>
-              <TextField.Root
-                value={formData.bannerUrl || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, bannerUrl: e.target.value }))}
-                placeholder="https://exemplo.com/banner.jpg"
-                type="url"
-              />
-            </Box>
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Banner URL</Text>
+            <TextField.Root
+              value={formData.bannerUrl || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, bannerUrl: e.target.value }))}
+              placeholder="https://example.com/banner.jpg"
+              type="url"
+              className="border-thin border-border focus:border-accent transition-colors"
+            />
+          </div>
 
-            <Box>
-              <Text as="label" size="2" weight="bold">Status</Text>
-              <Select.Root
-                value={formData.status || "active"}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Status</Text>
+            <Select.Root
+              value={formData.status || "active"}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
+            >
+              <Select.Trigger className="border-thin border-border focus:border-accent" />
+              <Select.Content className="bg-card border border-border shadow-refined">
+                <Select.Item value="active">Active</Select.Item>
+                <Select.Item value="inactive">Inactive</Select.Item>
+                <Select.Item value="busy">Busy</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          <div className="flex gap-3 pt-4 justify-end">
+            <Dialog.Close>
+              <Button
+                variant="soft"
+                className="bg-muted text-muted-foreground hover:bg-neutral-200 border-thin"
+                type="button"
+                color="red"
               >
-                <Select.Trigger placeholder="Selecione o status" />
-                <Select.Content>
-                  <Select.Item value="active">Ativo</Select.Item>
-                  <Select.Item value="inactive">Inativo</Select.Item>
-                  <Select.Item value="busy">Ocupado</Select.Item>
-                </Select.Content>
-              </Select.Root>
-            </Box>
-
-            <Flex gap="3" mt="4" justify="end">
-              <Dialog.Close>
-                <Button variant="soft" color="gray" type="button">
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" loading={isLoading}>
-                Salvar Alterações
+                Cancel
               </Button>
-            </Flex>
-          </Flex>
+            </Dialog.Close>
+            <Button
+            color="red"
+              type="submit"
+              className="bg-accent text-white hover:bg-accent/90 shadow-refined"
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </form>
       </Dialog.Content>
     </Dialog.Root>
-  );
+  )
 }
 
-// Componente para adicionar link social
-function AddSocialLinkDialog({ 
-  open, 
-  onClose, 
-  onAdd 
-}: { 
-  open: boolean; 
-  onClose: () => void; 
-  onAdd: (data: CreateSocialLink) => Promise<void>;
+// Enhanced Add Social Link Dialog
+function AddSocialLinkDialog({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean
+  onClose: () => void
+  onAdd: (data: CreateSocialLink) => Promise<void>
 }) {
   const [formData, setFormData] = useState<CreateSocialLink>({
     platform: "",
     url: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  })
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
     try {
-      await onAdd(formData);
-      setFormData({ platform: "", url: "" });
-      onClose();
+      await onAdd(formData)
+      setFormData({ platform: "", url: "" })
+      onClose()
     } catch (error) {
-      console.error("Erro ao adicionar link social:", error);
+      console.error("Erro ao adicionar link social:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
-      <Dialog.Content style={{ maxWidth: 400 }}>
-        <Dialog.Title>Adicionar Rede Social</Dialog.Title>
-        <Dialog.Description size="2" mb="4">
-          Adicione um novo link para suas redes sociais
+      <Dialog.Content className="max-w-md bg-card border border-border shadow-refined-lg">
+        <Dialog.Title className="text-2xl font-light text-foreground heading-refined">Add Social Link</Dialog.Title>
+        <Dialog.Description className="text-muted-foreground text-refined mb-6">
+          Connect your digital presence with style
         </Dialog.Description>
 
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="4">
-            <Box>
-              <Text as="label" size="2" weight="bold">Plataforma</Text>
-              <Select.Root
-                value={formData.platform}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, platform: value }))}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Platform</Text>
+            <Select.Root
+              value={formData.platform}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, platform: value }))}
+            >
+              <Select.Trigger className="border-thin border-border focus:border-accent" />
+              <Select.Content className="bg-card border border-border shadow-refined">
+                <Select.Item value="instagram">Instagram</Select.Item>
+                <Select.Item value="twitter">Twitter/X</Select.Item>
+                <Select.Item value="linkedin">LinkedIn</Select.Item>
+                <Select.Item value="github">GitHub</Select.Item>
+                <Select.Item value="youtube">YouTube</Select.Item>
+                <Select.Item value="tiktok">TikTok</Select.Item>
+                <Select.Item value="facebook">Facebook</Select.Item>
+                <Select.Item value="website">Website</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          <div className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">URL</Text>
+            <TextField.Root
+              value={formData.url}
+              onChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
+              placeholder="https://instagram.com/your_username"
+              type="url"
+              className="border-thin border-border focus:border-accent transition-colors"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 justify-end">
+            <Dialog.Close>
+              <Button
+                variant="soft"
+                color="red"
+        
+                className="bg-muted text-muted-foreground hover:bg-neutral-200 border-thin"
+                type="button"
               >
-                <Select.Trigger placeholder="Selecione a plataforma" />
-                <Select.Content>
-                  <Select.Item value="instagram">Instagram</Select.Item>
-                  <Select.Item value="twitter">Twitter/X</Select.Item>
-                  <Select.Item value="linkedin">LinkedIn</Select.Item>
-                  <Select.Item value="github">GitHub</Select.Item>
-                  <Select.Item value="youtube">YouTube</Select.Item>
-                  <Select.Item value="tiktok">TikTok</Select.Item>
-                  <Select.Item value="facebook">Facebook</Select.Item>
-                  <Select.Item value="website">Website</Select.Item>
-                </Select.Content>
-              </Select.Root>
-            </Box>
-
-            <Box>
-              <Text as="label" size="2" weight="bold">URL</Text>
-              <TextField.Root
-                value={formData.url}
-                onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                placeholder="https://instagram.com/seu_usuario"
-                type="url"
-                required
-              />
-            </Box>
-
-            <Flex gap="3" mt="4" justify="end">
-              <Dialog.Close>
-                <Button variant="soft" color="gray" type="button">
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" loading={isLoading} disabled={!formData.platform || !formData.url}>
-                Adicionar
+                Cancel
               </Button>
-            </Flex>
-          </Flex>
+            </Dialog.Close>
+            <Button
+              type="submit"
+              color="red"
+              className="bg-accent text-white hover:bg-accent/90 shadow-refined"
+              disabled={isLoading || !formData.platform || !formData.url}
+            >
+              {isLoading ? "Adding..." : "Add Link"}
+            </Button>
+          </div>
         </form>
       </Dialog.Content>
     </Dialog.Root>
-  );
+  )
 }
 
 export function ProfilePage() {
-  const navigate = useNavigate();
-  const { user, logout } = useAuthStore() as { user: User | null; logout: () => void };
-  const { updateProfile } = useCurrentUser();
-  const { followers } = useFollowers(user?.id);
-  const { following } = useFollowing(user?.id);
-  const { socialLinks, addLink, removeLink } = useSocialLinks(user?.id);
-  const {  loading: isLoadingPosts, error: postsError } = useAuthorPosts(user?.id, undefined, !!user?.id);
+  const navigate = useNavigate()
+  const { user, logout } = useAuthStore() as { user: User | null; logout: () => void }
+  const { updateProfile } = useCurrentUser()
+  const { followers } = useFollowers(user?.id)
+  const { following } = useFollowing(user?.id)
+  const { socialLinks, addLink, removeLink } = useSocialLinks(user?.id)
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [socialDialogOpen, setSocialDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null)
 
-  console.log("Dados do usuário que chegaram ao componente",user)
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+    logout()
+    navigate("/login")
+  }
 
   const handleUpdateProfile = async (data: UpdateUser) => {
     try {
-      await updateProfile(data);
-      // O store será atualizado automaticamente
+      await updateProfile(data)
     } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
+      console.error("Erro ao atualizar perfil:", error)
     }
-  };
+  }
 
   const handleAddSocialLink = async (data: CreateSocialLink) => {
     try {
-      await addLink(data);
+      await addLink(data)
     } catch (error) {
-      console.error("Erro ao adicionar link social:", error);
+      console.error("Erro ao adicionar link social:", error)
     }
-  };
+  }
 
   const handleRemoveSocialLink = async (linkId: string) => {
     try {
-      await removeLink(linkId);
-      setDeleteDialogOpen(null);
+      await removeLink(linkId)
+      setDeleteDialogOpen(null)
     } catch (error) {
-      console.error("Erro ao remover link social:", error);
+      console.error("Erro ao remover link social:", error)
     }
-  };
+  }
 
   if (!user) {
-    console.log("Dados do usuário que chegaram ao componente",user)
     return (
-      <Flex align="center" justify="center" style={{ height: "100vh" }}>
-        <Text size="5" weight="bold">
-          Carregando perfil...
-        </Text>
-      </Flex>
-    );
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <Text className="text-xl font-light text-foreground heading-refined">Loading your profile...</Text>
+        </div>
+      </div>
+    )
   }
-  
 
   return (
-    <Flex
-      direction="column"
-      align="center"
-      style={{ minHeight: "100vh", background: "#f8f9fa" }}
-    >
-      {/* Banner */}
+    <div className="min-h-screen bg-background">
+      {/* Enhanced Banner Section */}
       {user.bannerUrl && (
-        <Box
+        <div
+          className="w-full h-64 md:h-80 bg-cover bg-center relative"
           style={{
-            width: "100%",
-            height: 220,
-            backgroundImage: `url(${user.bannerUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            borderBottom: "2px solid #eaeaea",
+            backgroundImage: `linear-gradient(135deg, rgba(26, 35, 50, 0.3), rgba(255, 107, 107, 0.1)), url(${user.bannerUrl})`,
           }}
-        />
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>
+        </div>
       )}
 
-      {/* Card Principal */}
-      <Card
-        style={{
-          width: "90%",
-          maxWidth: 900,
-          marginTop: user.bannerUrl ? "-70px" : "2rem",
-          padding: "2rem",
-          boxShadow: "0px 6px 20px rgba(0,0,0,0.08)",
-        }}
-      >
-        <Flex direction="column" align="center" gap="4">
-          {/* Avatar + Botão de Editar */}
-          <Box style={{ position: "relative" }}>
-            <Avatar
-              size="9"
-              radius="full"
-              fallback={user.name?.[0] || "U"}
-              src={user.avatarUrl ?? undefined}
-              style={{ border: "4px solid white" }}
-            />
-            <IconButton
-              size="2"
-              style={{
-                position: "absolute",
-                bottom: 0,
-                right: 0,
-                borderRadius: "50%",
-              }}
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Pencil1Icon />
-            </IconButton>
-          </Box>
+      {/* Main Profile Card */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className={`bg-card rounded-lg shadow-refined-lg border border-border p-8 md:p-12 ${
+            user.bannerUrl ? "-mt-20 relative z-10" : "mt-8"
+          }`}
+        >
+          {/* Profile Header */}
+          <div className="flex flex-col items-center text-center space-y-6 mb-12">
+            {/* Avatar with Edit Button */}
+            <div className="relative group">
+              <Avatar
+                size="9"
+                radius="full"
+                fallback={user.name?.[0] || "U"}
+                src={user.avatarUrl ?? undefined}
+                className="border-4 border-card shadow-refined-lg w-32 h-32"
+              />
+              <button
+                onClick={() => setEditDialogOpen(true)}
+                className="absolute -bottom-2 -right-2 w-10 h-10 bg-accent text-white rounded-full border-4 border-card shadow-refined hover:bg-accent/90 transition-all group-hover:scale-110 flex items-center justify-center"
+              >
+                <Pencil1Icon className="w-4 h-4" />
+              </button>
+            </div>
 
-          {/* Nome + Email */}
-          <Heading size="6" weight="bold">
-            {user.name}
-          </Heading>
-          <Text color="gray" size="3">
-            @{user.slug}
-          </Text>
-          <Text color="gray" size="2">
-            {user.email}
-          </Text>
+            {/* Name and Details */}
+            <div className="space-y-3">
+              <h1 className="text-4xl md:text-5xl font-light text-foreground heading-refined">{user.name}</h1>
+              <div className="space-y-1">
+                <p className="text-lg text-muted-foreground accent-line inline-block">@{user.slug}</p>
+                <p className="text-muted-foreground text-refined">{user.email}</p>
+              </div>
+            </div>
 
-          {/* Estatísticas */}
-          <Flex gap="6" mt="3">
-            <Flex align="center" gap="2">
-              <PersonIcon />
-              <Text size="2" weight="bold">{followers.length}</Text>
-              <Text size="2" color="gray">Seguidores</Text>
-            </Flex>
-            <Flex align="center" gap="2">
-              <HeartIcon />
-              <Text size="2" weight="bold">{following.length}</Text>
-              <Text size="2" color="gray">Seguindo</Text>
-            </Flex>
-            <Flex align="center" gap="2">
-              <ChatBubbleIcon />
-              <Text size="2" weight="bold">{user.posts?.length || 0}</Text>
-              <Text size="2" color="gray">Posts</Text>
-            </Flex>
-          </Flex>
+            {/* Enhanced Statistics */}
+            <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+              <div className="text-center group cursor-pointer">
+                <div className="flex items-center justify-center space-x-2 mb-1">
+                  <PersonIcon className="w-5 h-5 text-accent" />
+                  <span className="text-2xl font-light text-foreground">{followers.length}</span>
+                </div>
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">Seguidores</span>
+              </div>
+              <div className="text-center group cursor-pointer">
+                <div className="flex items-center justify-center space-x-2 mb-1">
+                  <HeartIcon className="w-5 h-5 text-accent" />
+                  <span className="text-2xl font-light text-foreground">{following.length}</span>
+                </div>
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">Seguindo</span>
+              </div>
+              <div className="text-center group cursor-pointer">
+                <div className="flex items-center justify-center space-x-2 mb-1">
+                  <ChatBubbleIcon className="w-5 h-5 text-accent" />
+                  <span className="text-2xl font-light text-foreground">{user.posts?.length || 0}</span>
+                </div>
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">Publicações</span>
+              </div>
+            </div>
 
-          {/* Status + Verificado */}
-          <Flex gap="3" mt="3">
-            <Badge color={user.status === "active" ? "green" : user.status === "busy" ? "orange" : "red"}>
-              {user.status === "active" ? "Ativo" : user.status === "busy" ? "Ocupado" : "Inativo"}
-            </Badge>
-            <Badge color={user.verified ? "blue" : "gray"}>
-              {user.verified ? "Verificado" : "Não verificado"}
-            </Badge>
-          </Flex>
+            {/* Enhanced Status Badges */}
+            <div className="flex flex-wrap justify-center gap-3">
+              <Badge
+              color="gray"
+                className={`px-4 py-2 rounded-full border-thin ${
+                  user.status === "active"
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : user.status === "busy"
+                      ? "bg-orange-50 text-orange-700 border-orange-200"
+                      : "bg-red-50 text-red-700 border-red-200"
+                }`}
+              >
+                {user.status === "active" ? "Active" : user.status === "busy" ? "Busy" : "Inactive"}
+              </Badge>
+              <Badge
+              color="gray"
+                className={`px-4 py-2 rounded-full border-thin ${
+                  user.verified
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-gray-50 text-gray-700 border-gray-200"
+                }`}
+              >
+                {user.verified ? "Verified" : "Unverified"}
+              </Badge>
+            </div>
+          </div>
 
-          <Separator my="4" size="4" />
+          {/* Elegant Separator */}
+          <div className="relative mb-12">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <div className="bg-card px-6">
+                <div className="w-2 h-2 bg-accent rounded-full"></div>
+              </div>
+            </div>
+          </div>
 
-          {/* Tabs */}
-          <Tabs.Root defaultValue="about" style={{ width: "100%" }}>
-            <Tabs.List>
-              <Tabs.Trigger value="about">Sobre</Tabs.Trigger>
-              <Tabs.Trigger value="posts">Posts ({user.posts?.length || 0})</Tabs.Trigger>
-              <Tabs.Trigger value="comments">Comentários ({user.comments?.length || 0})</Tabs.Trigger>
-              <Tabs.Trigger value="social">Redes Sociais ({socialLinks.length})</Tabs.Trigger>
-              <Tabs.Trigger value="followers">Seguidores ({followers.length})</Tabs.Trigger>
-              <Tabs.Trigger value="following">Seguindo ({following.length})</Tabs.Trigger>
+          {/* Enhanced Tabs */}
+          <Tabs.Root defaultValue="about" className="w-full ">
+            <Tabs.List color="red" className="flex  flex-wrap justify-center items-center text-center gap-2 mb-8 bg-transparent p-1 rounded-lg border-none">
+              <Tabs.Trigger
+                value="about"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Biografia
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="posts"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Postagens ({user.posts?.length || 0})
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="comments"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Commentários ({user.comments?.length || 0})
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="social"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Social ({socialLinks.length})
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="followers"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Seguidores ({followers.length})
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="following"
+                className="px-6 py-3 rounded-md text-sm font-medium transition-all hover:bg-card data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-refined"
+              >
+                Seguindo ({following.length})
+              </Tabs.Trigger>
             </Tabs.List>
 
-            {/* Sobre */}
-            <Tabs.Content value="about">
-              <Box mt="4" style={{ textAlign: "center" }}>
-                <Heading size="4" mb="2">
-                  Sobre Mim
-                </Heading>
-                <Text size="3">{user.bio || "Nenhuma bio disponível."}</Text>
-                <Text size="2" color="gray" mt="3">
-                  Membro desde: {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                </Text>
-              </Box>
+            {/* About Tab */}
+            <Tabs.Content value="about" className="mt-8">
+              <div className="max-w-3xl mx-auto text-center space-y-6">
+                <h2 className="text-3xl font-light text-foreground heading-refined">Biografia</h2>
+                <p className="text-lg text-muted-foreground text-refined leading-relaxed">
+                  {user.bio || "No bio available yet. Add one to share your story with the world."}
+                </p>
+                <div className="pt-6 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Membro Desde{" "}
+                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
             </Tabs.Content>
 
-            {/* Posts */}
-            <Tabs.Content value="posts">
-              <Box mt="4">
-                <Flex justify="between" align="center" mb="3">
-                  <Heading size="4">
-                    Minhas Publicações
-                  </Heading>
-                  <Button size="2" onClick={() => navigate('/posts/new')}>
-                    <PlusIcon /> Criar Novo Post
+            {/* Posts Tab */}
+            <Tabs.Content value="posts" className="mt-8">
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-2xl font-light text-foreground heading-refined">Publicações</h2>
+                  <Button
+                  color="red"
+                    onClick={() => navigate("/posts/new")}
+                    className="bg-accent text-white hover:bg-accent/90 shadow-refined flex items-center gap-2"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Criar Publicação
                   </Button>
-                </Flex>
-                {isLoadingPosts && <Spinner />}
-                {postsError && <Text color="red">{postsError}</Text>}
-                {!isLoadingPosts && !postsError && <PostList />}
-              </Box>
-            </Tabs.Content>
+                </div>
 
-            {/* Comentários */}
-            <Tabs.Content value="comments">
-              <Box mt="4">
-                <Heading size="4" mb="2">
-                  Comentários
-                </Heading>
-                {user.comments && user.comments.length > 0 ? (
-                  <Flex direction="column" gap="3">
-                    {user.comments.map((comment) => (
-                      <Card key={comment.id} style={{ padding: "1rem" }}>
-                        <Text size="3">{comment.content}</Text>
-                        <Text size="2" color="gray" mt="2">
-                          {new Date(comment.createdAt).toLocaleString("pt-BR")}
-                        </Text>
-                      </Card>
+                {user.posts && user.posts.length > 0 ? (
+                  <div className="grid gap-6">
+                    {user.posts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="bg-card border border-border rounded-lg p-6 shadow-refined hover:shadow-refined-lg transition-shadow"
+                      >
+                        <h3 className="text-xl font-medium text-foreground mb-3 heading-refined">{post.title}</h3>
+                        <p className="text-muted-foreground mb-3 text-refined">{post.description}</p>
+                        {post.imageUrl && <p className="text-sm text-muted-foreground mb-3">Image: {post.imageUrl}</p>}
+                        <p className="text-foreground mb-4 text-refined">{post.content}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(post.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
                     ))}
-                  </Flex>
+                  </div>
                 ) : (
-                  <Text color="gray">Nenhum comentário ainda.</Text>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-refined">
+                      No publications yet. Create your first post to get started.
+                    </p>
+                  </div>
                 )}
-              </Box>
+              </div>
             </Tabs.Content>
 
-            {/* Redes Sociais */}
-            <Tabs.Content value="social">
-              <Box mt="4">
-                <Flex justify="between" align="center" mb="3">
-                  <Heading size="4">
-                    Redes Sociais
-                  </Heading>
-                  <Button size="2" onClick={() => setSocialDialogOpen(true)}>
-                    <PlusIcon /> Adicionar
+            {/* Comments Tab */}
+            <Tabs.Content value="comments" className="mt-8">
+              <div className="space-y-6">
+                <h2 className="text-2xl font-light text-foreground heading-refined">Commentários</h2>
+                {user.comments && user.comments.length > 0 ? (
+                  <div className="grid gap-4">
+                    {user.comments.map((comment) => (
+                      <div key={comment.id} className="bg-card border border-border rounded-lg p-4 shadow-refined">
+                        <p className="text-foreground text-refined mb-3">{comment.content}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-refined">No comments yet.</p>
+                  </div>
+                )}
+              </div>
+            </Tabs.Content>
+
+            {/* Social Links Tab */}
+            <Tabs.Content value="social" className="mt-8">
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-2xl font-light text-foreground heading-refined">Conexões Sociais</h2>
+                  <Button
+                    color="red"
+                    onClick={() => setSocialDialogOpen(true)}
+                    className="bg-accent text-white hover:bg-accent/90 shadow-refined flex items-center gap-2"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Add Link
                   </Button>
-                </Flex>
-                
+                </div>
+
                 {socialLinks.length > 0 ? (
-                  <Flex direction="column" gap="3">
+                  <div className="grid gap-4">
                     {socialLinks.map((link) => (
-                      <Card key={link.id} style={{ padding: "1rem" }}>
-                        <Flex justify="between" align="center">
-                          <Flex align="center" gap="3">
-                            <Badge color="blue">{link.platform.toUpperCase()}</Badge>
+                      <div
+                        key={link.id}
+                        className="bg-card border border-border rounded-lg p-4 shadow-refined hover:shadow-refined-lg transition-shadow"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <Badge color='red' className=" text-accent border-accent/20 px-3 py-1 rounded-full">
+                              {link.platform.toUpperCase()}
+                            </Badge>
                             <a
                               href={link.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{ textDecoration: "none" }}
+                              className="flex items-center gap-2 text-zinc-950 hover:text-accent/80 transition-colors group"
                             >
-                              <Flex align="center" gap="2">
-                                <Text size="3" color="blue">
-                                  {link.url}
-                                </Text>
-                                <ExternalLinkIcon />
-                              </Flex>
+                              <span className="text-refined group-hover:underline">{link.url}</span>
+                              <ExternalLinkIcon className="w-4 h-4" />
                             </a>
-                          </Flex>
-                          <IconButton
-                            size="1"
-                            color="red"
-                            variant="soft"
+                          </div>
+                          <button
                             onClick={() => setDeleteDialogOpen(link.id)}
+                            className="w-8 h-8 rounded-full bg-transparent text-zinc-950 hover:bg-red-100 transition-colors flex items-center justify-center"
                           >
-                            <TrashIcon />
-                          </IconButton>
-                        </Flex>
-                      </Card>
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
-                  </Flex>
+                  </div>
                 ) : (
-                  <Text color="gray">Nenhuma rede social cadastrada.</Text>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-refined">No social networks registered yet.</p>
+                  </div>
                 )}
-              </Box>
+              </div>
             </Tabs.Content>
 
-            {/* Seguidores */}
-            <Tabs.Content value="followers">
-              <Box mt="4">
-                <Heading size="4" mb="3">
-                  Seguidores
-                </Heading>
+            {/* Followers Tab */}
+            <Tabs.Content value="followers" className="mt-8">
+              <div className="space-y-6">
+                <h2 className="text-2xl font-light text-foreground heading-refined">Seguindores</h2>
                 {followers.length > 0 ? (
-                  <Flex direction="column" gap="3">
+                  <div className="grid gap-4">
                     {followers.map((follow) => (
-                      <Card key={follow.id} style={{ padding: "1rem" }}>
-                        <Flex align="center" gap="3">
+                      <div
+                        key={follow.id}
+                        className="bg-card border border-border rounded-lg p-4 shadow-refined hover:shadow-refined-lg transition-shadow"
+                      >
+                        <div className="flex items-center gap-4">
                           <Avatar
-                            size="3"
+                            size="6"
                             radius="full"
                             fallback={follow.follower?.name?.[0] || "U"}
                             src={follow.follower?.avatarUrl ?? undefined}
+                            className="border-2 border-border"
                           />
-                          <Box>
-                            <Text size="3" weight="bold">
-                              {follow.follower?.name}
-                            </Text>
-                            <Text size="2" color="gray">
-                              @{follow.follower?.slug}
-                            </Text>
-                          </Box>
-                        </Flex>
-                      </Card>
+                          <div>
+                            <h3 className="font-medium text-foreground">{follow.follower?.name}</h3>
+                            <p className="text-muted-foreground text-sm">@{follow.follower?.slug}</p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </Flex>
+                  </div>
                 ) : (
-                  <Text color="gray">Nenhum seguidor ainda.</Text>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-refined">No followers yet.</p>
+                  </div>
                 )}
-              </Box>
+              </div>
             </Tabs.Content>
 
-            {/* Seguindo */}
-            <Tabs.Content value="following">
-              <Box mt="4">
-                <Heading size="4" mb="3">
-                  Seguindo
-                </Heading>
+            {/* Following Tab */}
+            <Tabs.Content value="following" className="mt-8">
+              <div className="space-y-6">
+                <h2 className="text-2xl font-light text-foreground heading-refined">Seguindo</h2>
                 {following.length > 0 ? (
-                  <Flex direction="column" gap="3">
+                  <div className="grid gap-4">
                     {following.map((follow) => (
-                      <Card key={follow.id} style={{ padding: "1rem" }}>
-                        <Flex align="center" gap="3">
+                      <div
+                        key={follow.id}
+                        className="bg-card border border-border rounded-lg p-4 shadow-refined hover:shadow-refined-lg transition-shadow"
+                      >
+                        <div className="flex items-center gap-4">
                           <Avatar
-                            size="3"
+                            size="6"
                             radius="full"
                             fallback={follow.following?.name?.[0] || "U"}
                             src={follow.following?.avatarUrl ?? undefined}
+                            className="border-2 border-border"
                           />
-                          <Box>
-                            <Text size="3" weight="bold">
-                              {follow.following?.name}
-                            </Text>
-                            <Text size="2" color="gray">
-                              @{follow.following?.slug}
-                            </Text>
-                          </Box>
-                        </Flex>
-                      </Card>
+                          <div>
+                            <h3 className="font-medium text-foreground">{follow.following?.name}</h3>
+                            <p className="text-muted-foreground text-sm">@{follow.following?.slug}</p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </Flex>
+                  </div>
                 ) : (
-                  <Text color="gray">Não está seguindo ninguém ainda.</Text>
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-refined">Not following anyone yet.</p>
+                  </div>
                 )}
-              </Box>
+              </div>
             </Tabs.Content>
           </Tabs.Root>
 
-          <Separator my="4" />
+          {/* Enhanced Logout Section */}
+          <div className="mt-16 pt-8 border-t border-border text-center">
+            <Button
+              color="red"
+              onClick={handleLogout}
+              className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-refined"
+            >
+              Deslogar
+            </Button>
+          </div>
+        </div>
+      </div>
 
-          {/* Botão de logout */}
-          <Button color="red" variant="solid" onClick={handleLogout}>
-            Sair
-          </Button>
-        </Flex>
-      </Card>
+    
 
       {/* Dialogs */}
       <EditProfileDialog
@@ -601,32 +704,31 @@ export function ProfilePage() {
         onAdd={handleAddSocialLink}
       />
 
-      {/* Dialog de confirmação de exclusão */}
+      {/* Enhanced Delete Confirmation Dialog */}
       <AlertDialog.Root open={!!deleteDialogOpen} onOpenChange={() => setDeleteDialogOpen(null)}>
-        <AlertDialog.Content style={{ maxWidth: 450 }}>
-          <AlertDialog.Title>Remover Rede Social</AlertDialog.Title>
-          <AlertDialog.Description>
-            Tem certeza que deseja remover este link? Esta ação não pode ser desfeita.
+        <AlertDialog.Content className="max-w-md bg-card border border-border shadow-refined-lg">
+          <AlertDialog.Title className="text-xl font-light text-foreground heading-refined">
+            Remover Conta
+          </AlertDialog.Title>
+          <AlertDialog.Description className="text-muted-foreground text-refined">
+            Deseja realmente deletar essa conexão? Essa ação não pode ser retornada
           </AlertDialog.Description>
 
-          <Flex gap="3" mt="4" justify="end">
+          <div className="flex gap-3 mt-6 justify-end">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
-                Cancelar
-              </Button>
+              <Button className="bg-muted text-muted-foreground hover:bg-neutral-200 border-thin">Cancel</Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
               <Button
-                variant="solid"
-                color="red"
                 onClick={() => deleteDialogOpen && handleRemoveSocialLink(deleteDialogOpen)}
+                className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
               >
                 Remover
               </Button>
             </AlertDialog.Action>
-          </Flex>
+          </div>
         </AlertDialog.Content>
       </AlertDialog.Root>
-    </Flex>
-  );
+    </div>
+  )
 }

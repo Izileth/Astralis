@@ -45,7 +45,7 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button size="3" type="submit" disabled={isLoading}>
+        <Button size="3" type="submit" color="red"  disabled={isLoading}>
           {isLoading ? 'Entrando...' : 'Entrar'}
         </Button>
       </Flex>

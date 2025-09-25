@@ -124,7 +124,7 @@ export function PostForm({
 
         {/* TODO: Implementar inputs para Categoria e Tags */}
 
-        <Button type="submit" size="3" loading={isSubmitting} disabled={isSubmitting}>
+        <Button color='red' type="submit" size="3" loading={isSubmitting} disabled={isSubmitting}>
           {submitButtonText}
         </Button>
       </Flex>

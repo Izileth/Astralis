@@ -53,7 +53,7 @@ export function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button size="3" type="submit" disabled={isLoading}>
+        <Button size="3" color='red' type="submit" disabled={isLoading}>
           {isLoading ? 'Criando conta...' : 'Criar conta'}
         </Button>
       </Flex>
