@@ -17,6 +17,7 @@ import {
   IconButton,
   AlertDialog,
   Select,
+  Spinner
 } from "@radix-ui/themes";
 import { 
   Pencil1Icon, 
@@ -30,6 +31,8 @@ import {
 
 import useAuthStore from "../store/auth";
 import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user";
+import { useAuthorPosts } from "../hooks/post";
+import { PostList } from "../components/Post/PostList";
 import type { User, UpdateUser, CreateSocialLink } from "../types";
 
 // Componente para editar perfil
@@ -243,11 +246,13 @@ export function ProfilePage() {
   const { followers } = useFollowers(user?.id);
   const { following } = useFollowing(user?.id);
   const { socialLinks, addLink, removeLink } = useSocialLinks(user?.id);
+  const {  loading: isLoadingPosts, error: postsError } = useAuthorPosts(user?.id, undefined, !!user?.id);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [socialDialogOpen, setSocialDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
 
+  console.log("Dados do usuário que chegaram ao componente",user)
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -280,6 +285,7 @@ export function ProfilePage() {
   };
 
   if (!user) {
+    console.log("Dados do usuário que chegaram ao componente",user)
     return (
       <Flex align="center" justify="center" style={{ height: "100vh" }}>
         <Text size="5" weight="bold">
@@ -288,6 +294,7 @@ export function ProfilePage() {
       </Flex>
     );
   }
+  
 
   return (
     <Flex
@@ -412,29 +419,17 @@ export function ProfilePage() {
             {/* Posts */}
             <Tabs.Content value="posts">
               <Box mt="4">
-                <Heading size="4" mb="2">
-                  Publicações
-                </Heading>
-                {user.posts && user.posts.length > 0 ? (
-                  <Flex direction="column" gap="3">
-                    {user.posts.map((post) => (
-                      <Card key={post.id} style={{ padding: "1rem" }}>
-                        <Heading size="3">{post.title}</Heading>
-                        <Text color="gray" size="2" mb="2">
-                          {post.description}
-                        </Text>
-                        <Text size="2" mb="2">
-                          {post.content}
-                        </Text>
-                        <Text size="2" color="gray">
-                          {new Date(post.createdAt).toLocaleString("pt-BR")}
-                        </Text>
-                      </Card>
-                    ))}
-                  </Flex>
-                ) : (
-                  <Text color="gray">Nenhuma publicação ainda.</Text>
-                )}
+                <Flex justify="between" align="center" mb="3">
+                  <Heading size="4">
+                    Minhas Publicações
+                  </Heading>
+                  <Button size="2" onClick={() => navigate('/posts/new')}>
+                    <PlusIcon /> Criar Novo Post
+                  </Button>
+                </Flex>
+                {isLoadingPosts && <Spinner />}
+                {postsError && <Text color="red">{postsError}</Text>}
+                {!isLoadingPosts && !postsError && <PostList />}
               </Box>
             </Tabs.Content>
 

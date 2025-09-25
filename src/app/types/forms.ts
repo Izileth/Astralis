@@ -29,7 +29,9 @@ export interface CreatePost {
   videoUrl?: string;
   published?: boolean;
   categoryId?: string;
+  categoryName?: string;
   tagIds?: string[]; // Para associar tags existentes
+  tagNames?: string[];
   newTags?: string[]; // Para criar novas tags
 }
 
@@ -42,7 +44,9 @@ export interface UpdatePost {
   videoUrl?: string;
   published?: boolean;
   categoryId?: string;
+  categoryName?: string;
   tagIds?: string[];
+  tagNames?: string[];
   newTags?: string[];
 }
 

@@ -8,6 +8,10 @@ import { ProfilePage } from '../pages/ProfilePage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { SocialAuthCallbackPage } from '../pages/SocialAuthCallbackPage';
+import { PostPage } from '../pages/PostPage';
+import { UserPage } from '../pages/UserPage';
+import { CreatePostPage } from '../pages/CreatePostPage';
+import { EditPostPage } from '../pages/EditPostPage';
 import { Flex, Spinner } from '@radix-ui/themes';
 
 function ProtectedRoute() {
@@ -48,9 +52,13 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/auth/callback" element={<SocialAuthCallbackPage />} />
+      <Route path="/post/:slug" element={<PostPage />} />
+      <Route path="/user/:slug" element={<UserPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/posts/new" element={<CreatePostPage />} />
+        <Route path="/posts/:id/edit" element={<EditPostPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/profile" />} />

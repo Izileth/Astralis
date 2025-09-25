@@ -5,7 +5,7 @@ export interface PostsParams extends PaginationParams {
   categoryId?: string;
   categoryName?: string;
   tagId?: string;
-  tagName?: string;
+  tagNames?: string[];
   authorId?: string;
   published?: boolean;
   

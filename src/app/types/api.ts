@@ -20,12 +20,20 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export interface PostApiResponse<T> {
+  posts: T[];
+  total: number;
+  filters?: Record<string, any>;
+}
+
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
   errors?: string[];
 }
+
 
 export interface AuthResponse {
   success: boolean;

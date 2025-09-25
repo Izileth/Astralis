@@ -16,19 +16,19 @@ interface CarouselProps {
 const defaultItems: CarouselItem[] = [
   {
     id: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d0069872fd?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    imageUrl: 'https://i.pinimg.com/736x/97/e1/8f/97e18f2b0d715b18a80a4c1cf7f62e35.jpg',
     title: 'Explore a Natureza',
     description: 'Descubra paisagens incríveis e aventuras ao ar livre.',
   },
   {
     id: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1948&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    imageUrl: 'https://i.pinimg.com/736x/97/e1/8f/97e18f2b0d715b18a80a4c1cf7f62e35.jpg',
     title: 'Céus Estrelados',
     description: 'Maravilhe-se com a beleza do universo noturno.',
   },
   {
     id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1465146344425-ad42a8e7218c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    imageUrl: 'https://i.pinimg.com/736x/97/e1/8f/97e18f2b0d715b18a80a4c1cf7f62e35.jpg',
     title: 'Montanhas Majestosas',
     description: 'Conquiste novos picos e desfrute de vistas panorâmicas.',
   },
