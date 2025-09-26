@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Text, Flex, IconButton, AspectRatio, Progress, Button } from '@radix-ui/themes';
-import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
-import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/user'; // ajuste o caminho
+import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon, VideoIcon } from '@radix-ui/react-icons';
+import { usePostMediaUpload, useMediaValidation } from '../../hooks/post'; // ajuste o caminho
 
 export interface FileWithPreview extends File {
   preview: string;
@@ -16,51 +16,53 @@ interface UploadableFile {
   error?: string;
 }
 
-interface FileUploadProps {
-  onUploadComplete: (url: string) => void;
-  variant?: 'post' | 'banner' | 'avatar';
-  multiple?: boolean; // Note: multiple is only for post variant
-  userId?: string; // Para upload de avatar/banner de outros usuários
+interface PostFileUploadProps {
+  postId?: string; // Para upload direto em um post existente
+  onUploadComplete: (url: string, isVideo: boolean) => void;
+  onStandaloneUpload?: (url: string) => void; // Para upload standalone (retorna URL)
+  multiple?: boolean;
+  acceptVideo?: boolean; // Se deve aceitar vídeos além de imagens
+  maxFileSize?: number; // em MB
 }
 
-export function FileUpload({ 
+export function PostFileUpload({ 
+  postId,
   onUploadComplete,
-  variant = 'post',
-  multiple = false,
-  userId,
-}: FileUploadProps) {
+  onStandaloneUpload,
+  multiple = true,
+  acceptVideo = true,
+  maxFileSize = 10,
+}: PostFileUploadProps) {
   const [files, setFiles] = useState<UploadableFile[]>([]);
   
-  // Hooks para upload
-  const { user: currentUser } = useCurrentUser();
-  const { uploadUserAvatar, uploadUserBanner, isUploading: globalIsUploading } = useImageUpload();
-  const { validateImageFile } = useImageValidation();
+  // Hooks para upload e validação
+  const { uploadPostMedia, uploadStandaloneImage, isUploading } = usePostMediaUpload();
+  const { validateMediaFile } = useMediaValidation();
   
-  // Estado local de upload
-  const [isUploading, setIsUploading] = useState(false);
+  // Estado local
+  const [localUploading, setLocalUploading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const validatedFiles: UploadableFile[] = [];
 
     acceptedFiles.forEach(file => {
-      // Validar arquivo apenas para avatar e banner
-      if (variant !== 'post') {
-        const validation = validateImageFile(file, {
-          maxSize: variant === 'banner' ? 10 : 5, // Banner até 10MB, avatar até 5MB
-          acceptedTypes: ['image/jpeg', 'image/png', 'image/webp']
-        });
+      // Validar arquivo
+      const validation = validateMediaFile(file, {
+        maxSize: maxFileSize,
+        acceptedImageTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+        acceptedVideoTypes: acceptVideo ? ['video/mp4', 'video/webm', 'video/ogg'] : []
+      });
 
-        if (!validation.isValid) {
-          validatedFiles.push({
-            file: Object.assign(file, {
-              preview: URL.createObjectURL(file),
-            }) as FileWithPreview,
-            status: 'error',
-            progress: 0,
-            error: validation.errors.join(', ')
-          });
-          return;
-        }
+      if (!validation.isValid) {
+        validatedFiles.push({
+          file: Object.assign(file, {
+            preview: URL.createObjectURL(file),
+          }) as FileWithPreview,
+          status: 'error',
+          progress: 0,
+          error: validation.errors.join(', ')
+        });
+        return;
       }
 
       // Arquivo válido
@@ -74,23 +76,22 @@ export function FileUpload({
     });
 
     setFiles(prevFiles => multiple ? [...prevFiles, ...validatedFiles] : validatedFiles);
-  }, [multiple, variant, validateImageFile]);
+  }, [multiple, validateMediaFile, maxFileSize, acceptVideo]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
-      'video/*': variant === 'post' ? ['.mp4', '.webm', '.ogg'] : [],
+      ...(acceptVideo && { 'video/*': ['.mp4', '.webm', '.ogg'] })
     },
-    multiple: variant === 'post' ? multiple : false,
+    multiple,
   });
 
   const handleUpload = async () => {
-    // Filtrar apenas arquivos pendentes
     const pendingFiles = files.filter(f => f.status === 'pending');
     if (pendingFiles.length === 0) return;
 
-    setIsUploading(true);
+    setLocalUploading(true);
     
     // Marcar arquivos como 'uploading'
     setFiles(prev => prev.map(f => 
@@ -100,41 +101,50 @@ export function FileUpload({
     try {
       const uploadPromises = pendingFiles.map(async (uploadableFile) => {
         try {
-          let result;
-          const targetUserId = userId || currentUser?.id;
-          
-          if (!targetUserId) {
-            throw new Error('Usuário não identificado');
-          }
-
-          // Simular progresso inicial
+          // Progresso inicial
           setFiles(prev => prev.map(f => 
-            f.file === uploadableFile.file ? { ...f, progress: 10 } : f
+            f.file === uploadableFile.file ? { ...f, progress: 20 } : f
           ));
 
-          if (variant === 'avatar') {
-            result = await uploadUserAvatar(targetUserId, uploadableFile.file);
-          } else if (variant === 'banner') {
-            result = await uploadUserBanner(targetUserId, uploadableFile.file);
+          let result;
+          const isVideo = uploadableFile.file.type.startsWith('video/');
+
+          if (postId) {
+            // Upload direto para um post existente
+            result = await uploadPostMedia(postId, uploadableFile.file);
+            
+            // Progresso 80%
+            setFiles(prev => prev.map(f => 
+              f.file === uploadableFile.file ? { ...f, progress: 80 } : f
+            ));
+
+            if (result) {
+              const mediaUrl = isVideo ? result.videoUrl : result.imageUrl;
+              if (mediaUrl) {
+                onUploadComplete(mediaUrl, isVideo);
+              }
+            }
+          } else if (onStandaloneUpload && !isVideo) {
+            // Upload standalone apenas para imagens
+            const url = await uploadStandaloneImage(uploadableFile.file);
+            
+            // Progresso 80%
+            setFiles(prev => prev.map(f => 
+              f.file === uploadableFile.file ? { ...f, progress: 80 } : f
+            ));
+
+            if (url) {
+              onStandaloneUpload(url);
+              onUploadComplete(url, false);
+            }
           } else {
-            // Para posts, você pode implementar um serviço específico
-            // Por agora, vamos simular
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const mockUrl = `https://picsum.photos/seed/${encodeURIComponent(uploadableFile.file.name)}/800/600`;
-            onUploadComplete(mockUrl);
-            return { ...uploadableFile, status: 'success' as const, progress: 100 };
+            throw new Error('Configuração de upload inválida');
           }
 
           // Progresso completo
           setFiles(prev => prev.map(f => 
             f.file === uploadableFile.file ? { ...f, progress: 100 } : f
           ));
-
-          // Notificar conclusão com a URL da imagem
-          const imageUrl = variant === 'avatar' ? result.avatarUrl : result.bannerUrl;
-          if (imageUrl) {
-            onUploadComplete(imageUrl);
-          }
 
           return { ...uploadableFile, status: 'success' as const };
         } catch (error: any) {
@@ -158,7 +168,7 @@ export function FileUpload({
     } catch (error) {
       console.error('Erro geral no upload:', error);
     } finally {
-      setIsUploading(false);
+      setLocalUploading(false);
     }
   };
 
@@ -179,38 +189,13 @@ export function FileUpload({
     return () => files.forEach(f => URL.revokeObjectURL(f.file.preview));
   }, [files]);
 
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'avatar':
-        return {
-          dropzone: { p: '2', width: 128, height: 128, borderRadius: '50%' },
-          thumb: { width: 128, height: 128, borderRadius: '50%' },
-          icon: { width: 32, height: 32 },
-        };
-      case 'banner':
-        return {
-          dropzone: { p: '5', height: 160, width: '100%' },
-          thumb: { width: '100%', height: 160 },
-          icon: { width: 48, height: 48 },
-        };
-      case 'post':
-      default:
-        return {
-          dropzone: { p: '5' },
-          thumb: { width: 100, height: 100 },
-          icon: { width: 24, height: 24 },
-        };
-    }
-  };
-
-  const styles = getVariantStyles();
-
   const renderThumb = (uploadableFile: UploadableFile) => {
     const { file, status, progress, error } = uploadableFile;
+    const isVideo = file.type.startsWith('video/');
     
     return (
-      <Box key={file.name} style={{ position: 'relative', ...styles.thumb, overflow: 'hidden' }}>
-        <AspectRatio ratio={variant === 'banner' ? 16 / 9 : 1}>
+      <Box key={file.name} style={{ position: 'relative', width: 120, height: 120, overflow: 'hidden', borderRadius: 8 }}>
+        <AspectRatio ratio={1}>
           {file.type.startsWith('image/') ? (
             <img 
               src={file.preview} 
@@ -222,9 +207,16 @@ export function FileUpload({
                 opacity: status === 'error' ? 0.5 : 1
               }} 
             />
+          ) : isVideo ? (
+            <Flex align="center" justify="center" width="100%" height="100%" style={{ backgroundColor: 'var(--gray-a3)' }}>
+              <VideoIcon style={{ width: 32, height: 32, color: 'var(--gray-11)' }} />
+              <Text size="1" style={{ position: 'absolute', bottom: 4, left: 4, color: 'white', background: 'rgba(0,0,0,0.7)', padding: '2px 4px', borderRadius: 4 }}>
+                {Math.round(file.size / (1024 * 1024))}MB
+              </Text>
+            </Flex>
           ) : (
             <Flex align="center" justify="center" width="100%" height="100%" style={{ backgroundColor: 'var(--gray-a3)' }}>
-              <ImageIcon style={styles.icon} />
+              <ImageIcon style={{ width: 32, height: 32 }} />
             </Flex>
           )}
         </AspectRatio>
@@ -237,7 +229,8 @@ export function FileUpload({
               position: 'absolute', 
               bottom: 0, 
               left: 0, 
-              width: '100%' 
+              width: '100%',
+              height: 4
             }} 
           />
         )}
@@ -253,14 +246,14 @@ export function FileUpload({
               color: 'white', 
               width: 32, 
               height: 32, 
-              background: 'rgba(34, 197, 94, 0.8)', 
+              background: 'rgba(34, 197, 94, 0.9)', 
               borderRadius: '50%',
               padding: 4
             }} 
           />
         )}
         
-        {/* Ícone de erro */}
+        {/* Overlay de erro */}
         {status === 'error' && (
           <Flex 
             align="center" 
@@ -273,19 +266,20 @@ export function FileUpload({
               height: '100%',
               background: 'rgba(239, 68, 68, 0.1)',
               flexDirection: 'column',
-              gap: '8px'
+              gap: '4px',
+              padding: '8px'
             }}
           >
             <ExclamationTriangleIcon 
               style={{ 
                 color: 'var(--red-11)', 
-                width: 24, 
-                height: 24
+                width: 20, 
+                height: 20
               }} 
             />
             {error && (
-              <Text size="1" color="red" style={{ textAlign: 'center', padding: '0 8px' }}>
-                {error}
+              <Text size="1" color="red" style={{ textAlign: 'center' }}>
+                {error.length > 30 ? error.substring(0, 30) + '...' : error}
               </Text>
             )}
             <Button 
@@ -293,8 +287,9 @@ export function FileUpload({
               variant="soft" 
               color="red"
               onClick={() => retryUpload(uploadableFile)}
+              style={{ fontSize: 10 }}
             >
-              Tentar novamente
+              Retry
             </Button>
           </Flex>
         )}
@@ -315,55 +310,77 @@ export function FileUpload({
         >
           <Cross2Icon />
         </IconButton>
+
+        {/* Nome do arquivo */}
+        <Text 
+          size="1" 
+          style={{ 
+            position: 'absolute', 
+            bottom: 4, 
+            left: 4, 
+            right: 20,
+            color: 'white', 
+            background: 'rgba(0,0,0,0.7)', 
+            padding: '2px 4px', 
+            borderRadius: 4,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          {file.name}
+        </Text>
       </Box>
     );
   };
 
   const hasPendingFiles = files.some(f => f.status === 'pending');
   const hasErrorFiles = files.some(f => f.status === 'error');
-  const uploading = isUploading || globalIsUploading;
+  const uploading = localUploading || isUploading;
 
   return (
     <Flex direction="column" gap="4">
       <Box
         {...getRootProps()}
         style={{
-          ...styles.dropzone,
+          padding: '32px',
           border: `2px dashed var(--gray-a7)`,
           textAlign: 'center',
           cursor: 'pointer',
           backgroundColor: isDragActive ? 'var(--gray-a2)' : 'transparent',
-          transition: 'background-color 0.2s ease',
+          transition: 'all 0.2s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'column',
+          borderRadius: 8,
           opacity: uploading ? 0.6 : 1,
           pointerEvents: uploading ? 'none' : 'auto',
         }}
       >
         <input {...getInputProps()} />
-        {files.length === 0 && (
-          <Flex direction="column" align="center" gap="2">
-            <UploadIcon style={styles.icon} />
-            <Text size="2">
+        <Flex direction="column" align="center" gap="3">
+          <UploadIcon style={{ width: 32, height: 32, color: 'var(--gray-11)' }} />
+          <Flex direction="column" align="center" gap="1">
+            <Text size="3" weight="medium">
               {isDragActive
-                ? 'Solte o arquivo aqui...'
+                ? 'Solte os arquivos aqui...'
                 : "Arraste e solte ou clique para selecionar"}
             </Text>
-            {variant !== 'avatar' && (
+            <Text size="2" color="gray">
+              {acceptVideo ? 'Imagens e vídeos' : 'Imagens'} até {maxFileSize}MB
+            </Text>
+            {acceptVideo && (
               <Text size="1" color="gray">
-                {variant === 'post' ? 'Imagens e vídeos' : 'Imagem'} 
-                {variant === 'banner' ? ' (até 10MB)' : ' (até 5MB)'}
+                Formatos suportados: JPG, PNG, WebP, GIF, MP4, WebM
               </Text>
             )}
           </Flex>
-        )}
-        {files.length > 0 && variant !== 'post' && renderThumb(files[0])}
+        </Flex>
       </Box>
 
-      {files.length > 0 && variant === 'post' && (
-        <Flex wrap="wrap" gap="3" mt="4">
+      {files.length > 0 && (
+        <Flex wrap="wrap" gap="3">
           {files.map(renderThumb)}
         </Flex>
       )}
@@ -372,15 +389,22 @@ export function FileUpload({
         <Button 
           onClick={handleUpload} 
           color='red'
+          size="3"
           disabled={uploading}
         >
-          {uploading ? 'Enviando...' : `Upload ${variant === 'post' && files.length > 1 ? `${files.length} files` : 'file'}`}
+          {uploading ? 'Enviando...' : `Upload ${files.filter(f => f.status === 'pending').length} arquivo${files.filter(f => f.status === 'pending').length !== 1 ? 's' : ''}`}
         </Button>
       )}
 
       {hasErrorFiles && (
         <Text size="2" color="red">
-          Alguns arquivos falharam no upload. Clique em "Tentar novamente" ou remova-os.
+          Alguns arquivos falharam no upload. Clique em "Retry" ou remova-os.
+        </Text>
+      )}
+
+      {uploading && (
+        <Text size="2" color="gray">
+          Fazendo upload... Não feche esta página.
         </Text>
       )}
     </Flex>

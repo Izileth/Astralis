@@ -6,7 +6,7 @@ import { Button, Flex, Text, Callout, TextArea, Container, Separator,  Box, Avat
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Post } from '../../types';
-import { FileUpload } from '../Common/FileUpload';
+import { PostFileUpload } from '../Common/PostFileUpload';
 import useAuthStore from '../../store/auth';
 
 // Schema de validação com Zod
@@ -87,8 +87,7 @@ export function PostForm({
             </Callout.Root>
           )}
 
-          <FileUpload 
-            variant="banner"
+          <PostFileUpload
             onUploadComplete={(url) => setValue('imageUrl', url, { shouldValidate: true })}
           />
           {watchedImageUrl && !errors.imageUrl && (
