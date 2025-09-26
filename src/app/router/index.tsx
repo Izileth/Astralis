@@ -12,6 +12,7 @@ import { PostPage } from '../pages/PostPage';
 import { UserPage } from '../pages/UserPage';
 import { CreatePostPage } from '../pages/CreatePostPage';
 import { EditPostPage } from '../pages/EditPostPage';
+import { SplashScreen } from '../components/Common/SplashScreen';
 import { Flex, Spinner } from '@radix-ui/themes';
 
 function ProtectedRoute() {
@@ -37,9 +38,7 @@ function AppRoutes() {
 
   if (isLoading) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100vh' }}>
-        <Spinner size={'3'} />
-      </Flex>
+      <SplashScreen />
     );
   }
 

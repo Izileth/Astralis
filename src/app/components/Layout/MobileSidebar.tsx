@@ -1,11 +1,18 @@
-import { Flex, Box, Button, Text } from '@radix-ui/themes';
-import { Link, useNavigate } from 'react-router-dom';
+import { Flex, IconButton } from '@radix-ui/themes';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/auth';
+import { Cross1Icon } from '@radix-ui/react-icons';
 
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const NavLink = ({ children, onClick }: { children: React.ReactNode; onClick: () => void }) => (
+  <button onClick={onClick} className="nav-link">
+    {children}
+  </button>
+);
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const navigate = useNavigate();
@@ -22,55 +29,71 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     navigate(path);
   };
 
-  return (
-    <Box
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 999,
-        display: isOpen ? 'block' : 'none',
-      }}
-      onClick={onClose} // Close when clicking outside
-    >
-      <Flex
-        direction="column"
-        p="4"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '250px',
-          height: '100%',
-          backgroundColor: 'var(--color-background)',
-          boxShadow: '2px 0 5px rgba(0,0,0,0.2)',
-          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease-in-out',
-        }}
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside sidebar
-      >
-        <Flex justify="end" mb="4">
-          <Button variant="ghost" onClick={onClose}>X</Button>
-        </Flex>
+  const styles = `
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #fff;
+      z-index: 998;
+      opacity: ${isOpen ? 1 : 0};
+      visibility: ${isOpen ? 'visible' : 'hidden'};
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-link {
+      background: none;
+      border: none;
+      color: black;
+      font-size: 2rem;
+      font-weight: 400;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      transition: color 0.2s ease, transform 0.2s ease;
+      opacity: ${isOpen ? 1 : 0};
+      transform: ${isOpen ? 'translateY(0)' : 'translateY(20px)'};
+      transition-property: opacity, transform;
+      transition-duration: 0.3s;
+      transition-timing-function: ease-out;
+    }
+    .nav-link:hover {
+      color: var(--red-9);
+      transform: scale(1.05);
+    }
+    .close-button {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      color: black;
+    }
+  `;
 
-        <Flex direction="column" gap="3">
-          <Link to="/" onClick={() => handleNavigation('/')}><Text size="4">Home</Text></Link>
-          {isAuthenticated ? (
-            <>
-              <Link to="/profile" onClick={() => handleNavigation('/profile')}><Text size="4">Meu Perfil</Text></Link>
-              <Button variant="ghost" color="red" onClick={handleLogout}>Sair</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" onClick={() => handleNavigation('/login')}>Entrar</Button>
-              <Button onClick={() => handleNavigation('/register')}>Registrar</Button>
-            </>
-          )}
-        </Flex>
+  return (
+    <div className="overlay">
+      <style>{styles}</style>
+      <IconButton variant="ghost" size="4" className="close-button" onClick={onClose}>
+        <Cross1Icon />
+      </IconButton>
+
+      <Flex direction="column" gap="4" align="center">
+        <NavLink onClick={() => handleNavigation('/')}>Inicio</NavLink>
+        {isAuthenticated ? (
+          <>
+            <NavLink onClick={() => handleNavigation('/profile')}>Meu Perfil</NavLink>
+            <NavLink onClick={handleLogout}>Sair</NavLink>
+          </>
+        ) : (
+          <>
+            <NavLink onClick={() => handleNavigation('/login')}>Entrar</NavLink>
+            <NavLink onClick={() => handleNavigation('/register')}>Registrar</NavLink>
+          </>
+        )}
       </Flex>
-    </Box>
+    </div>
   );
 }
+

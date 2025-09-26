@@ -22,8 +22,8 @@ export function Header() {
       align="center"
       p="4"
       style={{
-        borderBottom: '1px solid var(--gray-a5)',
-        backgroundColor: 'var(--color-background)',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+        backgroundColor: '#FFFFFF',
         position: 'sticky',
         top: 0,
         zIndex: 100,
@@ -33,13 +33,8 @@ export function Header() {
       <header>
         <Flex align="center" gap="3">
           {/* Hamburger icon for mobile */}
-          <Box display={{ initial: 'block', sm: 'none' }}>
-            <IconButton variant="ghost" onClick={() => setIsSidebarOpen(true)}>
-              <HamburgerMenuIcon width="18" height="18" />
-            </IconButton>
-          </Box>
 
-          <Link to="/">
+          <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
             <Text size="5" weight="bold">Astralis</Text>
           </Link>
         </Flex>
@@ -53,7 +48,6 @@ export function Header() {
                     size="2"
                     src={user?.avatarUrl || undefined}
                     fallback={user?.name?.[0] || 'U'}
-                    color="indigo"
                   />
                 </Button>
               </DropdownMenu.Trigger>
@@ -65,11 +59,16 @@ export function Header() {
             </DropdownMenu.Root>
           ) : (
             <>
-              <Button color='red' variant="ghost" onClick={() => navigate('/login')}>Entrar</Button>
-              <Button color='red'  onClick={() => navigate('/register')}>Registrar</Button>
+              <Button variant="ghost" color="gray" onClick={() => navigate('/login')}>Entrar</Button>
+              <Button color='red' onClick={() => navigate('/register')}>Registrar</Button>
             </>
           )}
         </Flex>
+          <Box display={{ initial: 'block', sm: 'none' }}>
+            <IconButton variant="ghost" color="gray" onClick={() => setIsSidebarOpen(true)}>
+              <HamburgerMenuIcon width="18" height="18" />
+            </IconButton>
+          </Box>
 
         {/* Mobile Sidebar */}
         <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
