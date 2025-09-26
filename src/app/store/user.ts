@@ -1,5 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { userService } from '../services';
+import useAuthStore from './auth';
 import type { 
   User, 
   CreateUser, 
@@ -54,7 +56,9 @@ interface UserActions {
 
 type UserStore = UserState & UserActions;
 
-const useUserStore = create<UserStore>((set) => ({
+const useUserStore = create<UserStore>()(
+  persist(
+    (set, get) => ({
   // Initial State
   users: [],
   currentViewedUser: null,
@@ -122,18 +126,43 @@ const useUserStore = create<UserStore>((set) => ({
   },
 
   updateUser: async (id: string, data: UpdateUser) => {
-    set({ isLoading: true, error: null });
-    try {
+    const { currentViewedUser } = get();
+    const { setUser } = useAuthStore.getState();
+
+    if (!currentViewedUser || currentViewedUser.id !== id) {
       const updatedUser = await userService.update(id, data);
-      set((state) => ({
-        users: state.users.map(user => user.id === id ? updatedUser : user),
-        currentViewedUser: state.currentViewedUser?.id === id ? updatedUser : state.currentViewedUser,
-        isLoading: false
+      set((state) => ({ 
+        users: state.users.map(u => u.id === id ? updatedUser : u)
       }));
+      // Se o usuário atualizado for o usuário logado, atualize o authStore também
+      if (useAuthStore.getState().user?.id === id) {
+        setUser(updatedUser);
+      }
       return updatedUser;
+    }
+
+    const originalUser = { ...currentViewedUser };
+    const optimisticUser = { ...currentViewedUser, ...data };
+
+    // Atualização otimista em ambos os stores
+    set({ currentViewedUser: optimisticUser, isLoading: true });
+    setUser(optimisticUser);
+
+    try {
+      const confirmedUser = await userService.update(id, data);
+      
+      // Sucesso: confirma dados em ambos os stores
+      set({ currentViewedUser: confirmedUser, isLoading: false });
+      setUser(confirmedUser);
+
+      return confirmedUser;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Erro ao atualizar usuário';
-      set({ error: errorMessage, isLoading: false });
+      
+      // Falha: reverte em ambos os stores
+      set({ currentViewedUser: originalUser, error: errorMessage, isLoading: false });
+      setUser(originalUser);
+
       throw new Error(errorMessage);
     }
   },
@@ -257,8 +286,9 @@ const useUserStore = create<UserStore>((set) => ({
       const errorMessage = error.response?.data?.message || error.message || 'Erro ao buscar links sociais';
       set({ error: errorMessage, isLoading: false });
     }
+    
   },
-
+  
   removeSocialLink: async (userId: string, socialLinkId: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -272,6 +302,14 @@ const useUserStore = create<UserStore>((set) => ({
       set({ error: errorMessage, isLoading: false });
     }
   },
-}));
+
+  }),
+    {
+      name: 'user-storage',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({ currentViewedUser: state.currentViewedUser })
+    }
+  )
+);
 
 export default useUserStore;

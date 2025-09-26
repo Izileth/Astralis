@@ -1,9 +1,10 @@
-import { Card, Box, Heading, Text, Flex, Avatar, IconButton, Inset } from '@radix-ui/themes';
+import { Card, Box, Heading, Text, Flex, Avatar, IconButton, Inset, Badge } from '@radix-ui/themes';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Post } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Pencil1Icon } from '@radix-ui/react-icons';
+import { Pencil1Icon, HeartIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
+import { Carousel } from '../Common/Carousel';
 
 interface PostCardProps {
   post: Post;
@@ -19,22 +20,22 @@ export function PostCard({ post, isOwner = false }: PostCardProps) {
     navigate(`/posts/${post.id}/edit`);
   };
 
+  const mediaItems = [];
+  if (post.imageUrl) {
+    mediaItems.push({ type: 'image' as const, src: post.imageUrl });
+  }
+  if (post.videoUrl) {
+    mediaItems.push({ type: 'video' as const, src: post.videoUrl });
+  }
+
   return (
     <Card asChild style={{ position: 'relative' }}>
       <Link to={`/post/${post.slug}`}>
         <Inset clip="padding-box" side="top" pb="current">
-          {post.imageUrl ? (
-            <img
-              src={post.imageUrl}
-              alt={post.title}
-              style={{
-                display: 'block',
-                objectFit: 'cover',
-                width: '100%',
-                height: 140,
-                backgroundColor: 'var(--gray-5)',
-              }}
-            />
+          {mediaItems.length > 0 ? (
+            <div style={{ width: '100%', height: 140 }}>
+              <Carousel items={mediaItems} />
+            </div>
           ) : (
             <Flex 
               align="center" 
@@ -45,11 +46,14 @@ export function PostCard({ post, isOwner = false }: PostCardProps) {
                 backgroundColor: 'var(--gray-3)' 
               }}
             >
-              <Text color="gray">Sem Imagem</Text>
+              <Text color="gray">Sem Mídia</Text>
             </Flex>
           )}
         </Inset>
         <Box p="3">
+          {post.category && (
+            <Badge color="gray" mb="2">{post.category.name}</Badge>
+          )}
           <Heading size="3" mb="1" >
             {post.title}
           </Heading>
@@ -68,6 +72,25 @@ export function PostCard({ post, isOwner = false }: PostCardProps) {
                 formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ptBR })
               }
             </Text>
+          </Flex>
+          {post.tags && post.tags.length > 0 && (
+            <Flex wrap="wrap" gap="2" mt="3">
+              {post.tags.map(({ tag }) => (
+                <Badge key={tag?.id} color="red" variant="soft">
+                  {tag?.name}
+                </Badge>
+              ))}
+            </Flex>
+          )}
+          <Flex gap="4" mt="4" pt="3" className="border-t">
+            <Flex align="center" gap="1" className="text-gray-500">
+              <HeartIcon width="14" height="14" />
+              <Text size="1">{post.likes?.length || 0}</Text>
+            </Flex>
+            <Flex align="center" gap="1" className="text-gray-500">
+              <ChatBubbleIcon width="14" height="14" />
+              <Text size="1">{post.comments?.length || 0}</Text>
+            </Flex>
           </Flex>
         </Box>
         {isOwner && (

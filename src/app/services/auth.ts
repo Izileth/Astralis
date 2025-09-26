@@ -86,9 +86,16 @@ class AuthService {
 
   // Método para obter o usuário atual
   async getCurrentUser(): Promise<User> {
+    const token = this.getAccessToken();
+    if (!token) {
+      // Lança um erro se o token não estiver disponível
+      return Promise.reject(new Error('Authentication token not found.'));
+    }
+
     const response = await apiClient.get('/api/auth/me');
-    // Assumindo que retorna diretamente o usuário
+    
     return response.data;
+  
   }
 
   logout() {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { authService } from '../services';
 import type { User, SignIn, SignUp, ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest, ResetPasswordResponse } from '../types';
 
@@ -17,6 +17,7 @@ interface AuthActions {
   logout: () => void;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  setUser: (user: User) => void;
   refreshToken: () => Promise<boolean>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<ForgotPasswordResponse>;
   resetPassword: (data: ResetPasswordRequest) => Promise<ResetPasswordResponse>;
@@ -36,13 +37,21 @@ const useAuthStore = create<AuthStore>()(
 
       // Actions
       clearError: () => set({ error: null }),
+      setUser: (user) => set({ user }),
 
       checkAuth: async () => {
+        // Verifica se o estado já foi reidratado e se o usuário já está autenticado
+        const { isAuthenticated: isAlreadyAuth, user: existingUser } = useAuthStore.getState();
+        if (isAlreadyAuth && existingUser) {
+          set({ isLoading: false });
+          return; // O estado já está correto, não é necessário buscar na API
+        }
+
         set({ isLoading: true });
         try {
           const token = authService.getAccessToken();
           if (token) {
-            // Tenta buscar o usuário atual
+            // Se não estiver no estado, mas houver um token, busca os dados do usuário
             const user = await authService.getCurrentUser();
             set({
               isAuthenticated: true,
@@ -52,6 +61,7 @@ const useAuthStore = create<AuthStore>()(
               error: null,
             });
           } else {
+            // Se não houver token, garante que o estado de autenticação seja nulo
             set({
               user: null,
               token: null,
@@ -60,10 +70,10 @@ const useAuthStore = create<AuthStore>()(
             });
           }
         } catch (error: any) {
-          // Se falhar, tenta fazer refresh do token
+          // Se a busca falhar (ex: token expirado), tenta renovar o token
           const newToken = await authService.tryRefreshToken();
           if (newToken) {
-            // Se conseguiu fazer refresh, tenta novamente buscar o usuário
+            // Com o novo token, tenta buscar o usuário novamente
             try {
               const user = await authService.getCurrentUser();
               set({
@@ -74,26 +84,14 @@ const useAuthStore = create<AuthStore>()(
                 error: null,
               });
             } catch (err) {
-              // Se ainda falhar, faz logout
+              // Se mesmo assim falhar, efetua o logout
               authService.logout();
-              set({
-                user: null,
-                token: null,
-                isAuthenticated: false,
-                isLoading: false,
-                error: null,
-              });
+              set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
             }
           } else {
-            // Se não conseguiu fazer refresh, faz logout
+            // Se a renovação do token falhar, efetua o logout
             authService.logout();
-            set({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              isLoading: false,
-              error: null,
-            });
+            set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
           }
         }
       },
@@ -255,9 +253,12 @@ const useAuthStore = create<AuthStore>()(
         }
       },
     }),
+    
     {
-      name: 'auth-storage',
+      name: 'auth-storage', // Chave no storage
+      storage: createJSONStorage(() => sessionStorage), // Usa sessionStorage com serialização JSON
       partialize: (state) => ({
+        // Apenas o estado essencial é persistido
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,

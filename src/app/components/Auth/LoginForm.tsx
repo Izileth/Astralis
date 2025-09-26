@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Flex,  Callout } from '@radix-ui/themes';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, TextField, Flex, Text, Callout } from '@radix-ui/themes';
 import useAuthStore from '../../store/auth';
 
 export function LoginForm() {
@@ -45,7 +45,14 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button size="3" type="submit" color="red"  disabled={isLoading}>
+        <Flex justify="end">
+          <Link to="/forgot-password">
+            <Text size="2" color="gray">
+              Esqueceu sua senha?
+            </Text>
+          </Link>
+        </Flex>
+        <Button size="3" type="submit" color="red" disabled={isLoading}>
           {isLoading ? 'Entrando...' : 'Entrar'}
         </Button>
       </Flex>
