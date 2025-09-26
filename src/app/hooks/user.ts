@@ -6,17 +6,30 @@ import type { UpdateUser, CreateSocialLink, UsersParams } from '../types';
 // Hook para gerenciar o perfil do usuário atual
 export const useCurrentUser = () => {
   const { user } = useAuthStore();
-  const { updateUser, isLoading, error } = useUserStore();
+  const { updateUser, uploadAvatar, uploadBanner, isLoading, isUploading, error } = useUserStore();
 
   const updateProfile = async (data: UpdateUser) => {
     if (!user?.id) throw new Error('Usuário não autenticado');
     return updateUser(user.id, data);
   };
 
+  const updateAvatar = async (file: File) => {
+    if (!user?.id) throw new Error('Usuário não autenticado');
+    return uploadAvatar(user.id, file);
+  };
+
+  const updateBanner = async (file: File) => {
+    if (!user?.id) throw new Error('Usuário não autenticado');
+    return uploadBanner(user.id, file);
+  };
+
   return {
     user,
     updateProfile,
+    updateAvatar,
+    updateBanner,
     isLoading,
+    isUploading,
     error
   };
 };
@@ -91,13 +104,11 @@ export const useFollowers = (userId?: string) => {
 
   const follow = async (followingId: string) => {
     await followUser(followingId);
-    // Atualizar a lista de seguidores se necessário
     if (userId) fetchFollowers(userId);
   };
 
   const unfollow = async (followingId: string) => {
     await unfollowUser(followingId);
-    // Atualizar a lista de seguidores se necessário
     if (userId) fetchFollowers(userId);
   };
 
@@ -195,4 +206,69 @@ export const useIsFollowing = (targetUserId?: string) => {
   );
 
   return isFollowing;
+};
+
+// Hook específico para upload de imagens
+export const useImageUpload = () => {
+  const { uploadAvatar, uploadBanner, isUploading, error } = useUserStore();
+
+  const uploadUserAvatar = async (userId: string, file: File) => {
+    return uploadAvatar(userId, file);
+  };
+
+  const uploadUserBanner = async (userId: string, file: File) => {
+    return uploadBanner(userId, file);
+  };
+
+  return {
+    uploadUserAvatar,
+    uploadUserBanner,
+    isUploading,
+    error
+  };
+};
+
+// Hook para validar e processar arquivos de imagem
+export const useImageValidation = () => {
+  const validateImageFile = (file: File, options?: {
+    maxSize?: number; // em MB
+    acceptedTypes?: string[];
+  }) => {
+    const { 
+      maxSize = 5, // 5MB por padrão
+      acceptedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    } = options || {};
+
+    const errors: string[] = [];
+
+    // Validar tipo de arquivo
+    if (!acceptedTypes.includes(file.type)) {
+      errors.push('Tipo de arquivo não suportado. Use JPG, PNG ou WebP.');
+    }
+
+    // Validar tamanho do arquivo
+    const fileSizeInMB = file.size / (1024 * 1024);
+    if (fileSizeInMB > maxSize) {
+      errors.push(`Arquivo muito grande. Máximo permitido: ${maxSize}MB`);
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  const createImagePreview = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  return {
+    validateImageFile,
+    createImagePreview
+  };
 };

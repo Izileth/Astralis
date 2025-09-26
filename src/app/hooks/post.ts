@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { usePostStore } from '../store/post';
 import type { PostsParams, CreatePost, UpdatePost } from '../types';
 
-
 // === HOOK PRINCIPAL PARA POSTS ===
 export const usePosts = (params?: PostsParams, autoFetch = true) => {
   const {
@@ -146,6 +145,87 @@ export const useDeletePost = () => {
     deletePost: remove,
     loading: loading.deleting,
     error: errors.deleting,
+  };
+};
+
+// === NOVO: HOOK PARA UPLOAD DE MÍDIA ===
+export const usePostMediaUpload = () => {
+  const { uploadMedia, uploadImage, loading, errors } = usePostStore();
+
+  const uploadPostMedia = useCallback(async (postId: string, file: File) => {
+    return await uploadMedia(postId, file);
+  }, [uploadMedia]);
+
+  const uploadStandaloneImage = useCallback(async (file: File) => {
+    return await uploadImage(file);
+  }, [uploadImage]);
+
+  return {
+    uploadPostMedia,
+    uploadStandaloneImage,
+    isUploading: loading.uploading,
+    error: errors.uploading,
+  };
+};
+
+// === HOOK PARA VALIDAÇÃO DE ARQUIVOS DE MÍDIA ===
+export const useMediaValidation = () => {
+  const validateMediaFile = useCallback((file: File, options?: {
+    maxSize?: number; // em MB
+    acceptedImageTypes?: string[];
+    acceptedVideoTypes?: string[];
+  }) => {
+    const { 
+      maxSize = 10, // 10MB por padrão
+      acceptedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+      acceptedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg']
+    } = options || {};
+
+    const errors: string[] = [];
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    // Validar se é imagem ou vídeo
+    if (!isImage && !isVideo) {
+      errors.push('Arquivo deve ser uma imagem ou vídeo');
+    }
+
+    // Validar tipo específico
+    if (isImage && !acceptedImageTypes.includes(file.type)) {
+      errors.push('Tipo de imagem não suportado. Use JPG, PNG, WebP ou GIF.');
+    }
+
+    if (isVideo && !acceptedVideoTypes.includes(file.type)) {
+      errors.push('Tipo de vídeo não suportado. Use MP4, WebM ou OGG.');
+    }
+
+    // Validar tamanho
+    const fileSizeInMB = file.size / (1024 * 1024);
+    if (fileSizeInMB > maxSize) {
+      errors.push(`Arquivo muito grande. Máximo permitido: ${maxSize}MB`);
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      isImage,
+      isVideo,
+      sizeInMB: fileSizeInMB
+    };
+  }, []);
+
+  const createMediaPreview = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  return {
+    validateMediaFile,
+    createMediaPreview
   };
 };
 
@@ -395,7 +475,6 @@ export const usePostFilters = () => {
   const applyFilters = useCallback(async (filters: PostsParams) => {
     setFilters(filters);
     
-    // Aplicar filtro específico se necessário
     if (filters.categoryName) {
       return fetchPostsByCategory(filters.categoryName, filters);
     }
@@ -489,7 +568,7 @@ export const usePagination = () => {
 
 // === HOOK PARA OPERAÇÕES EM LOTE ===
 export const useBulkOperations = () => {
-  const {  updatePost, deletePost } = usePostStore();
+  const { updatePost, deletePost } = usePostStore();
 
   const bulkUpdate = useCallback(async (
     postIds: string[], 
@@ -554,20 +633,16 @@ export const usePostCache = () => {
   const { posts, currentPost, relatedPosts, similarPosts } = usePostStore();
 
   const getPostFromCache = useCallback((id: string) => {
-    // Procurar primeiro no post atual
     if (currentPost?.id === id) {
       return currentPost;
     }
     
-    // Procurar na lista de posts
     const foundInPosts = posts.find(post => post.id === id);
     if (foundInPosts) return foundInPosts;
     
-    // Procurar nos posts relacionados
     const foundInRelated = relatedPosts.find(post => post.id === id);
     if (foundInRelated) return foundInRelated;
     
-    // Procurar nos posts similares
     const foundInSimilar = similarPosts.find(post => post.id === id);
     if (foundInSimilar) return foundInSimilar;
     
@@ -575,20 +650,16 @@ export const usePostCache = () => {
   }, [posts, currentPost, relatedPosts, similarPosts]);
 
   const getPostBySlugFromCache = useCallback((slug: string) => {
-    // Procurar primeiro no post atual
     if (currentPost?.slug === slug) {
       return currentPost;
     }
     
-    // Procurar na lista de posts
     const foundInPosts = posts.find(post => post.slug === slug);
     if (foundInPosts) return foundInPosts;
     
-    // Procurar nos posts relacionados
     const foundInRelated = relatedPosts.find(post => post.slug === slug);
     if (foundInRelated) return foundInRelated;
     
-    // Procurar nos posts similares
     const foundInSimilar = similarPosts.find(post => post.slug === slug);
     if (foundInSimilar) return foundInSimilar;
     
@@ -613,12 +684,11 @@ export const usePostCache = () => {
 
 // === HOOK PARA VALIDAÇÃO E FORMULÁRIOS ===
 export const usePostValidation = () => {
-  const { categories} = usePostStore();
+  const { categories } = usePostStore();
 
   const validatePost = useCallback((post: Partial<CreatePost | UpdatePost>) => {
     const errors: Record<string, string> = {};
 
-    // Validação do título
     if (!post.title?.trim()) {
       errors.title = 'Título é obrigatório';
     } else if (post.title.length < 3) {
@@ -627,14 +697,12 @@ export const usePostValidation = () => {
       errors.title = 'Título deve ter no máximo 200 caracteres';
     }
 
-    // Validação do conteúdo
     if (!post.content?.trim()) {
       errors.content = 'Conteúdo é obrigatório';
     } else if (post.content.length < 10) {
       errors.content = 'Conteúdo deve ter pelo menos 10 caracteres';
     }
 
-    // Validação da descrição
     if (post.description && post.description.length > 500) {
       errors.description = 'Descrição deve ter no máximo 500 caracteres';
     }
@@ -713,6 +781,8 @@ export const usePostManager = () => {
   const filters = usePostFilters();
   const pagination = usePagination();
   const bulkOps = useBulkOperations();
+  const mediaUpload = usePostMediaUpload();
+  const mediaValidation = useMediaValidation();
 
   return {
     // Store completo
@@ -725,6 +795,8 @@ export const usePostManager = () => {
     filters,
     pagination,
     bulkOperations: bulkOps,
+    mediaUpload,
+    mediaValidation,
     
     // Métodos de conveniência
     isLoading: ui.isAnyLoading,

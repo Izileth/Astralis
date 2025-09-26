@@ -61,6 +61,7 @@ interface PostState {
     deleting: boolean;
     related: boolean;
     similar: boolean;
+    uploading: boolean; // NOVO: estado de upload
   };
   
   // Estados de erro
@@ -75,6 +76,7 @@ interface PostState {
     deleting: string | null;
     related: string | null;
     similar: string | null;
+    uploading: string | null; // NOVO: erro de upload
   };
   
   // Filtros atuais
@@ -90,6 +92,10 @@ interface PostActions {
   updatePost: (id: string, data: UpdatePost) => Promise<Post | null>;
   deletePost: (id: string) => Promise<boolean>;
   togglePublish: (id: string) => Promise<Post | null>;
+  
+  // === NOVO: AÇÕES DE UPLOAD ===
+  uploadMedia: (postId: string, file: File) => Promise<Post | null>;
+  uploadImage: (file: File) => Promise<string | null>; // Para upload standalone de imagem
   
   // === AÇÕES DE CATEGORIAS E TAGS ===
   fetchCategories: () => Promise<void>;
@@ -159,6 +165,7 @@ const initialState: PostState = {
     deleting: false,
     related: false,
     similar: false,
+    uploading: false, // NOVO
   },
   
   errors: {
@@ -172,6 +179,7 @@ const initialState: PostState = {
     deleting: null,
     related: null,
     similar: null,
+    uploading: null, // NOVO
   },
   
   currentFilters: {},
@@ -183,7 +191,6 @@ export const usePostStore = create<PostStore>()(
       ...initialState,
       
       // === IMPLEMENTAÇÃO DAS AÇÕES ===
-      
       
       fetchPosts: async (params) => {
         set(state => ({
@@ -198,7 +205,6 @@ export const usePostStore = create<PostStore>()(
           console.log('Resposta da API:', response);
           
           if (response.success && response.data) {
-            // ✅ Agora desestrutura corretamente
             const { posts, total } = response.data;
             const page = params?.page ?? 1;
             const limit = params?.limit ?? 10;
@@ -230,6 +236,7 @@ export const usePostStore = create<PostStore>()(
           }));
         }
       },
+
       fetchPostBySlug: async (slug) => {
         set(state => ({
           loading: { ...state.loading, currentPost: true },
@@ -385,6 +392,62 @@ export const usePostStore = create<PostStore>()(
           return null;
         }
       },
+
+      // === NOVAS AÇÕES DE UPLOAD ===
+      uploadMedia: async (postId, file) => {
+        set(state => ({
+          loading: { ...state.loading, uploading: true },
+          errors: { ...state.errors, uploading: null }
+        }));
+        
+        try {
+          const response = await postService.uploadMedia(postId, file);
+          
+          if (response.success && response.data) {
+            // Atualizar o post com a nova mídia
+            set(state => ({
+              posts: state.posts.map(post => post.id === postId ? response.data! : post),
+              currentPost: state.currentPost?.id === postId ? response.data : state.currentPost,
+              loading: { ...state.loading, uploading: false }
+            }));
+            return response.data;
+          } else {
+            throw new Error(response.message || 'Erro ao fazer upload da mídia');
+          }
+        } catch (error) {
+          set(state => ({
+            loading: { ...state.loading, uploading: false },
+            errors: { ...state.errors, uploading: error instanceof Error ? error.message : 'Erro desconhecido' }
+          }));
+          return null;
+        }
+      },
+
+      uploadImage: async (file) => {
+        set(state => ({
+          loading: { ...state.loading, uploading: true },
+          errors: { ...state.errors, uploading: null }
+        }));
+        
+        try {
+          const response = await postService.uploadImage(file);
+          
+          if (response.success && response.data) {
+            set(state => ({
+              loading: { ...state.loading, uploading: false }
+            }));
+            return response.data.url;
+          } else {
+            throw new Error(response.message || 'Erro ao fazer upload da imagem');
+          }
+        } catch (error) {
+          set(state => ({
+            loading: { ...state.loading, uploading: false },
+            errors: { ...state.errors, uploading: error instanceof Error ? error.message : 'Erro desconhecido' }
+          }));
+          return null;
+        }
+      },
       
       fetchCategories: async () => {
         set(state => ({
@@ -452,11 +515,11 @@ export const usePostStore = create<PostStore>()(
       },
       
       fetchMostLikedPosts: async (params) => {
-        await get().fetchPosts(params); // Backend retorna já ordenado por likes
+        await get().fetchPosts(params);
       },
       
       fetchRecentPosts: async (params) => {
-        await get().fetchPosts(params); // Backend retorna já ordenado por data
+        await get().fetchPosts(params);
       },
       
       fetchStats: async () => {
@@ -581,6 +644,7 @@ export const usePostStore = create<PostStore>()(
           deleting: null,
           related: null,
           similar: null,
+          uploading: null,
         }
       }),
       

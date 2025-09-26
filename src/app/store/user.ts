@@ -17,6 +17,7 @@ interface UserState {
   following: Follow[];
   socialLinks: SocialLink[];
   isLoading: boolean;
+  isUploading: boolean;
   error: string | null;
 }
 
@@ -28,6 +29,10 @@ interface UserActions {
   fetchUserById: (id: string) => Promise<void>;
   updateUser: (id: string, data: UpdateUser) => Promise<User>;
   deleteUser: (id: string) => Promise<void>;
+  
+  // Upload Operations
+  uploadAvatar: (userId: string, file: File) => Promise<User>;
+  uploadBanner: (userId: string, file: File) => Promise<User>;
   
   // Follow Operations
   followUser: (followingId: string) => Promise<void>;
@@ -44,6 +49,7 @@ interface UserActions {
   clearError: () => void;
   clearCurrentUser: () => void;
   setLoading: (loading: boolean) => void;
+  setUploading: (uploading: boolean) => void;
 }
 
 type UserStore = UserState & UserActions;
@@ -56,12 +62,14 @@ const useUserStore = create<UserStore>((set) => ({
   following: [],
   socialLinks: [],
   isLoading: false,
+  isUploading: false,
   error: null,
 
   // Utility Actions
   clearError: () => set({ error: null }),
   clearCurrentUser: () => set({ currentViewedUser: null }),
   setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setUploading: (uploading: boolean) => set({ isUploading: uploading }),
 
   // CRUD Operations
   createUser: async (data: CreateUser) => {
@@ -145,12 +153,46 @@ const useUserStore = create<UserStore>((set) => ({
     }
   },
 
+  // Upload Operations
+  uploadAvatar: async (userId: string, file: File) => {
+    set({ isUploading: true, error: null });
+    try {
+      const updatedUser = await userService.uploadAvatar(userId, file);
+      set((state) => ({
+        users: state.users.map(user => user.id === userId ? updatedUser : user),
+        currentViewedUser: state.currentViewedUser?.id === userId ? updatedUser : state.currentViewedUser,
+        isUploading: false
+      }));
+      return updatedUser;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Erro ao fazer upload do avatar';
+      set({ error: errorMessage, isUploading: false });
+      throw new Error(errorMessage);
+    }
+  },
+
+  uploadBanner: async (userId: string, file: File) => {
+    set({ isUploading: true, error: null });
+    try {
+      const updatedUser = await userService.uploadBanner(userId, file);
+      set((state) => ({
+        users: state.users.map(user => user.id === userId ? updatedUser : user),
+        currentViewedUser: state.currentViewedUser?.id === userId ? updatedUser : state.currentViewedUser,
+        isUploading: false
+      }));
+      return updatedUser;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Erro ao fazer upload do banner';
+      set({ error: errorMessage, isUploading: false });
+      throw new Error(errorMessage);
+    }
+  },
+
   // Follow Operations
   followUser: async (followingId: string) => {
     set({ isLoading: true, error: null });
     try {
       await userService.follow(followingId);
-      // Atualizar o estado local se necessário
       set({ isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Erro ao seguir usuário';
