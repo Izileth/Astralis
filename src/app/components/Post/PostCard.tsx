@@ -3,21 +3,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { Post } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Pencil1Icon, HeartIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, HeartIcon, ChatBubbleIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Carousel } from '../Common/Carousel';
 
 interface PostCardProps {
   post: Post;
   isOwner?: boolean;
+  onDelete?: (id: string) => void;
 }
 
-export function PostCard({ post, isOwner = false }: PostCardProps) {
+export function PostCard({ post, isOwner = false, onDelete }: PostCardProps) {
   const navigate = useNavigate();
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Impede a navegação do Link principal
     e.stopPropagation();
     navigate(`/posts/${post.id}/edit`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Impede a navegação do Link principal
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(post.id);
+    }
   };
 
   const mediaItems = [];
@@ -61,14 +70,21 @@ export function PostCard({ post, isOwner = false }: PostCardProps) {
             {post.description || ''}
           </Text>
           <Flex align="center" gap="2" mt="3">
-            <Avatar
-              size="1"
-              src={post.author?.avatarUrl || undefined}
-              fallback={post.author?.name?.[0] || 'U'}
-              radius="full"
-            />
+            <Link to={`/author/${post.author?.slug}`} onClick={(e) => e.stopPropagation()}>
+              <Flex align="center" gap="2">
+                <Avatar
+                  size="1"
+                  src={post.author?.avatarUrl || undefined}
+                  fallback={post.author?.name?.[0] || 'U'}
+                  radius="full"
+                />
+                <Text size="1" color="gray">
+                  {post.author?.name || 'Autor Desconhecido'}
+                </Text>
+              </Flex>
+            </Link>
             <Text size="1" color="gray">
-              {post.author?.name || 'Autor Desconhecido'} • {
+              • {
                 formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ptBR })
               }
             </Text>
@@ -94,15 +110,24 @@ export function PostCard({ post, isOwner = false }: PostCardProps) {
           </Flex>
         </Box>
         {isOwner && (
-          <IconButton 
-            size="1" 
-            variant="ghost" 
-            color="gray"
-            onClick={handleEditClick}
-            style={{ position: 'absolute', top: '8px', right: '8px' }}
-          >
-            <Pencil1Icon />
-          </IconButton>
+          <Flex direction="column" gap="2" style={{ position: 'absolute', top: '8px', right: '8px' }}>
+            <IconButton 
+              size="1" 
+              variant="ghost" 
+              color="gray"
+              onClick={handleEditClick}
+            >
+              <Pencil1Icon />
+            </IconButton>
+            <IconButton 
+              size="1" 
+              variant="ghost" 
+              color="red"
+              onClick={handleDeleteClick}
+            >
+              <TrashIcon />
+            </IconButton>
+          </Flex>
         )}
       </Link>
     </Card>

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { usePost } from '../hooks/post';
 import { Box, Flex, Heading, Text, Avatar, Spinner, Container, Separator, Badge } from '@radix-ui/themes';
 import { format } from 'date-fns';
@@ -80,7 +80,9 @@ export function PostPage() {
               radius="full"
             />
             <Box>
-              <Text weight="bold">{post.author?.name || 'Autor Desconhecido'}</Text>
+              <Link to={`/author/${post.author.slug}`}>
+                <Text weight="bold">{post.author?.name || 'Autor Desconhecido'}</Text>
+              </Link>
               <Text color="gray" as="p">
                 Publicado em {format(new Date(post.createdAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </Text>

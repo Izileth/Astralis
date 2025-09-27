@@ -16,8 +16,11 @@ import {
 
 import useAuthStore from "../store/auth"
 import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user"
+import { useDeletePost } from "../hooks/post"
+import { useDeleteComment } from "../hooks/comment"
 import type { User, UpdateUser, CreateSocialLink } from "../types"
 import { FileUpload} from "../components/Common/FileUpload";
+import { PostCard } from "../components/Post/PostCard";
 
 // Enhanced Edit Profile Dialog
 function EditProfileDialog({
@@ -240,10 +243,14 @@ export function ProfilePage() {
   const { followers } = useFollowers(user?.id)
   const { following } = useFollowing(user?.id)
   const { socialLinks, addLink, removeLink } = useSocialLinks(user?.id)
+  const { deletePost } = useDeletePost()
+  const { deleteComment } = useDeleteComment()
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [socialDialogOpen, setSocialDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null)
+  const [deletePostDialogOpen, setDeletePostDialogOpen] = useState<string | null>(null)
+  const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState<string | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -272,6 +279,24 @@ export function ProfilePage() {
       setDeleteDialogOpen(null)
     } catch (error) {
       console.error("Erro ao remover link social:", error)
+    }
+  }
+
+  const handleRemovePost = async (postId: string) => {
+    try {
+      await deletePost(postId)
+      setDeletePostDialogOpen(null)
+    } catch (error) {
+      console.error("Erro ao remover post:", error)
+    }
+  }
+
+  const handleRemoveComment = async (commentId: string) => {
+    try {
+      await deleteComment(commentId)
+      setDeleteCommentDialogOpen(null)
+    } catch (error) {
+      console.error("Erro ao remover comentário:", error)
     }
   }
 
@@ -476,26 +501,9 @@ export function ProfilePage() {
                 </div>
 
                 {user.posts && user.posts.length > 0 ? (
-                  <div className="grid gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {user.posts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="bg-card border border-border rounded-lg p-6 shadow-refined hover:shadow-refined-lg transition-shadow"
-                      >
-                        <h3 className="text-xl font-medium text-foreground mb-3 heading-refined">{post.title}</h3>
-                        <p className="text-muted-foreground mb-3 text-refined">{post.description}</p>
-                        {post.imageUrl && <p className="text-sm text-muted-foreground mb-3">Image: {post.imageUrl}</p>}
-                        <p className="text-foreground mb-4 text-refined">{post.content}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(post.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
+                      <PostCard key={post.id} post={post} isOwner={true} onDelete={() => setDeletePostDialogOpen(post.id)} />
                     ))}
                   </div>
                 ) : (
@@ -516,7 +524,15 @@ export function ProfilePage() {
                   <div className="grid gap-4">
                     {user.comments.map((comment) => (
                       <div key={comment.id} className="bg-card border border-border rounded-lg p-4 shadow-refined">
-                        <p className="text-foreground text-refined mb-3">{comment.content}</p>
+                        <div className="flex justify-between items-start">
+                          <p className="text-foreground text-refined mb-3">{comment.content}</p>
+                          <button
+                            onClick={() => setDeleteCommentDialogOpen(comment.id)}
+                            className="w-8 h-8 rounded-full bg-transparent text-zinc-950 hover:bg-red-100 transition-colors flex items-center justify-center"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {new Date(comment.createdAt).toLocaleDateString("en-US", {
                             year: "numeric",
@@ -692,11 +708,11 @@ export function ProfilePage() {
         onAdd={handleAddSocialLink}
       />
 
-      {/* Enhanced Delete Confirmation Dialog */}
+      {/* Enhanced Delete Confirmation Dialog for Social Link */}
       <AlertDialog.Root open={!!deleteDialogOpen} onOpenChange={() => setDeleteDialogOpen(null)}>
         <AlertDialog.Content className="max-w-md bg-card border border-border shadow-refined-lg">
           <AlertDialog.Title className="text-xl font-light text-foreground heading-refined">
-            Remover Conta
+            Remover Conexão Social
           </AlertDialog.Title>
           <AlertDialog.Description className="text-muted-foreground text-refined">
             Deseja realmente deletar essa conexão? Essa ação não pode ser retornada
@@ -709,6 +725,58 @@ export function ProfilePage() {
             <AlertDialog.Action>
               <Button
                 onClick={() => deleteDialogOpen && handleRemoveSocialLink(deleteDialogOpen)}
+                className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              >
+                Remover
+              </Button>
+            </AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Delete Confirmation Dialog for Post */}
+      <AlertDialog.Root open={!!deletePostDialogOpen} onOpenChange={() => setDeletePostDialogOpen(null)}>
+        <AlertDialog.Content className="max-w-md bg-card border border-border shadow-refined-lg">
+          <AlertDialog.Title className="text-xl font-light text-foreground heading-refined">
+            Remover Postagem
+          </AlertDialog.Title>
+          <AlertDialog.Description className="text-muted-foreground text-refined">
+            Deseja realmente deletar essa postagem? Essa ação não pode ser retornada.
+          </AlertDialog.Description>
+
+          <div className="flex gap-3 mt-6 justify-end">
+            <AlertDialog.Cancel>
+              <Button className="bg-muted text-muted-foreground hover:bg-neutral-200 border-thin">Cancelar</Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => deletePostDialogOpen && handleRemovePost(deletePostDialogOpen)}
+                className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              >
+                Remover
+              </Button>
+            </AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Delete Confirmation Dialog for Comment */}
+      <AlertDialog.Root open={!!deleteCommentDialogOpen} onOpenChange={() => setDeleteCommentDialogOpen(null)}>
+        <AlertDialog.Content className="max-w-md bg-card border border-border shadow-refined-lg">
+          <AlertDialog.Title className="text-xl font-light text-foreground heading-refined">
+            Remover Comentário
+          </AlertDialog.Title>
+          <AlertDialog.Description className="text-muted-foreground text-refined">
+            Deseja realmente deletar esse comentário? Essa ação não pode ser retornada.
+          </AlertDialog.Description>
+
+          <div className="flex gap-3 mt-6 justify-end">
+            <AlertDialog.Cancel>
+              <Button className="bg-muted text-muted-foreground hover:bg-neutral-200 border-thin">Cancelar</Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => deleteCommentDialogOpen && handleRemoveComment(deleteCommentDialogOpen)}
                 className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
               >
                 Remover

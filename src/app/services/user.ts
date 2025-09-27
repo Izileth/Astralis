@@ -106,10 +106,8 @@ class UserService {
     return response.data;
   }
 
-  async removeSocialLink(userId: string, socialLinkId: string): Promise<void> {
-    const response = await apiClient.delete(`/api/users/${userId}/social-links`, {
-      data: { id: socialLinkId }
-    });
+  async removeSocialLink( socialLinkId: string): Promise<void> {
+    const response = await apiClient.delete(`/api/users/${socialLinkId}/social-links`);
     return response.data;
   }
 

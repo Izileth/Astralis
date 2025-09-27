@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import useAuthStore from '../../store/auth';
 import { MobileSidebar } from './MobileSidebar';
-import { HamburgerMenuIcon } from '@radix-ui/react-icons';
+import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
-export function Header() {
+export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSearchIconClick: () => void, onDesktopSearchIconClick: () => void }) {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,6 +40,9 @@ export function Header() {
         </Flex>
 
         <Flex align="center" gap="3" display={{ initial: 'none', sm: 'flex' }}>
+          <IconButton variant="ghost" color="gray" onClick={onDesktopSearchIconClick}>
+            <MagnifyingGlassIcon width="18" height="18" />
+          </IconButton>
           {isAuthenticated ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>  
@@ -67,6 +70,9 @@ export function Header() {
           <Box display={{ initial: 'block', sm: 'none' }}>
             <IconButton variant="ghost" color="gray" onClick={() => setIsSidebarOpen(true)}>
               <HamburgerMenuIcon width="18" height="18" />
+            </IconButton>
+            <IconButton variant="ghost" color="gray" onClick={onSearchIconClick}>
+              <MagnifyingGlassIcon width="18" height="18" />
             </IconButton>
           </Box>
 

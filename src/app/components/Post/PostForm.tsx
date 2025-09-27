@@ -2,12 +2,15 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Flex, Text, Callout, TextArea, Container, Separator,  Box, Avatar } from '@radix-ui/themes';
+import { Button, Flex, Text, Callout, TextArea, Container, Separator,  Box, Avatar, TextField } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Post } from '../../types';
 import { PostFileUpload } from '../Common/PostFileUpload';
+import { TagInput } from '../Common/TagInput';
+import { TiptapEditor } from '../Common/TiptapEditor';
 import useAuthStore from '../../store/auth';
+import { useCategories, useTags } from '../../hooks/post';
 
 // Schema de validação com Zod
 const postSchema = z.object({
@@ -36,6 +39,8 @@ export function PostForm({
   submitButtonText = 'Salvar' 
 }: PostFormProps) {
   const { user } = useAuthStore();
+  const { categories } = useCategories();
+  const { tags } = useTags();
   const { 
     control, 
     handleSubmit, 
@@ -173,22 +178,42 @@ export function PostForm({
           <Separator size="4" my="3" />
 
           <Controller
+            name="categoryName"
+            control={control}
+            render={({ field }) => (
+              <div>
+                <Text as="label" size="2" weight="bold">Categoria</Text>
+                <TextField.Root
+                  {...field}
+                  list="categories-list"
+                  placeholder="Selecione ou crie uma categoria"
+                />
+                <datalist id="categories-list">
+                  {Array.isArray(categories) && categories.map(cat => <option key={cat.id} value={cat.name} />)}
+                </datalist>
+              </div>
+            )}
+          />
+          {errors.categoryName && <Text size="1" color="red">{errors.categoryName.message}</Text>}
+
+          <Controller
+            name="tagNames"
+            control={control}
+            render={({ field }) => (
+              <TagInput
+                {...field}
+                value={field.value || []}
+                existingTags={Array.isArray(tags) ? tags.map(t => t.name) : []}
+              />
+            )}
+          />
+          {errors.tagNames && <Text size="1" color="red">{errors.tagNames.message}</Text>}
+
+          <Controller
             name="content"
             control={control}
             render={({ field }) => (
-              <TextArea
-                {...field}
-                placeholder="Comece a escrever sua história..."
-                className="wysiwyg-content"
-                rows={15}
-                size="3"
-                style={{
-                  border: 'none', 
-                  boxShadow: 'none',
-                  padding: 0,
-                  resize: 'vertical'
-                }}
-              />
+              <TiptapEditor {...field} />
             )}
           />
           {errors.content && <Text size="1" color="red">{errors.content.message}</Text>}

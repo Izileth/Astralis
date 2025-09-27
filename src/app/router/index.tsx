@@ -12,6 +12,7 @@ import { PostPage } from '../pages/PostPage';
 import { UserPage } from '../pages/UserPage';
 import { CreatePostPage } from '../pages/CreatePostPage';
 import { EditPostPage } from '../pages/EditPostPage';
+import { AuthorProfilePage } from '../pages/AuthorProfilePage';
 import { SplashScreen } from '../components/Common/SplashScreen';
 import { Flex, Spinner } from '@radix-ui/themes';
 
@@ -53,6 +54,7 @@ function AppRoutes() {
       <Route path="/auth/callback" element={<SocialAuthCallbackPage />} />
       <Route path="/post/:slug" element={<PostPage />} />
       <Route path="/user/:slug" element={<UserPage />} />
+      <Route path="/author/:slug" element={<AuthorProfilePage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<ProfilePage />} />
