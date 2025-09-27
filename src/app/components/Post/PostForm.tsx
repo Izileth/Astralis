@@ -30,13 +30,15 @@ interface PostFormProps {
   initialData?: Post;
   isSubmitting?: boolean;
   submitButtonText?: string;
+  postId?: string;
 }
 
 export function PostForm({ 
   onSubmit, 
   initialData,
   isSubmitting = false, 
-  submitButtonText = 'Salvar' 
+  submitButtonText = 'Salvar',
+  postId
 }: PostFormProps) {
   const { user } = useAuthStore();
   const { categories } = useCategories();
@@ -82,7 +84,11 @@ export function PostForm({
   const displayDate = initialData?.createdAt ? new Date(initialData.createdAt) : new Date();
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+      if (e.key === 'Enter' && !(e.target as HTMLElement).closest('.ProseMirror')) {
+        e.preventDefault();
+      }
+    }}>
       <Container size="3" py="8">
         <Flex direction="column" gap="5">
           {anyError && (
@@ -93,7 +99,9 @@ export function PostForm({
           )}
 
           <PostFileUpload
+            postId={postId}
             onUploadComplete={(url) => setValue('imageUrl', url, { shouldValidate: true })}
+            onStandaloneUpload={(url) => setValue('imageUrl', url, { shouldValidate: true })}
           />
           {watchedImageUrl && !errors.imageUrl && (
              <img

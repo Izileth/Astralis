@@ -40,6 +40,7 @@ export function EditPostPage() {
           initialData={post} 
           isSubmitting={isUpdating} 
           submitButtonText="Salvar Alterações"
+          postId={id}
         />
       </Card>
     </Container>
