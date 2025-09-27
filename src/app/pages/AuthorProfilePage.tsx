@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom"
 import { Text, Avatar, Badge, Tabs, Spinner,  Heading, Flex, Container } from "@radix-ui/themes"
 import { PersonIcon, HeartIcon, ChatBubbleIcon } from "@radix-ui/react-icons"
 
-import { useUserProfile } from "../hooks/user"
-import { useAuthorPosts } from "../hooks/post"
+import { useUserProfile } from "../hooks/useUser"
+import { useAuthorPosts } from "../hooks/usePost"
 import { PostCard } from "../components/Post/PostCard"
 
 export function AuthorProfilePage() {

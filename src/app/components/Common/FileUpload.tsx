@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Text, Flex, IconButton, AspectRatio, Progress, Button } from '@radix-ui/themes';
 import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
-import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/user'; // ajuste o caminho
+import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/useUser'; // ajuste o caminho
 
 export interface FileWithPreview extends File {
   preview: string;

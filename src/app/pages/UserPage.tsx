@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
-import { useUserProfile } from '../hooks/user';
-import { useAuthorPosts } from '../hooks/post';
+import { useUserProfile } from '../hooks/useUser';
+import { useAuthorPosts } from '../hooks/usePost';
 import { PostList } from '../components/Post/PostList';
 import {
   Flex,

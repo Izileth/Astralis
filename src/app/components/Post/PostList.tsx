@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePosts, usePagination } from '../../hooks/post';
+import { usePosts, usePagination } from '../../hooks/usePost';
 import { PostCard } from './PostCard';
 import { Grid, Flex, Button, Text, Spinner, Box, Heading } from '@radix-ui/themes';
 

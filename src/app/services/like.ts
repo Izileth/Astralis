@@ -1,5 +1,3 @@
-
-
 import apiClient from './api';
 import type { ApiResponse } from '../types';
 
@@ -8,9 +6,17 @@ export interface LikeCount {
   isLikedByCurrentUser: boolean;
 }
 
+export interface LikeResponse {
+  id: string;
+  userId: string;
+  postId?: string;
+  commentId?: string;
+  createdAt: string;
+}
+
 class LikeService {
   // === AÇÕES DE CURTIDA EM POSTS ===
-  async likePost(data: { postId: string }): Promise<ApiResponse<void>> {
+  async likePost(data: { postId: string }): Promise<ApiResponse<LikeResponse>> {
     const response = await apiClient.post('/api/likes/posts', data);
     return response.data;
   }
@@ -26,7 +32,7 @@ class LikeService {
   }
 
   // === AÇÕES DE CURTIDA EM COMENTÁRIOS ===
-  async likeComment(commentId: string): Promise<ApiResponse<void>> {
+  async likeComment(commentId: string): Promise<ApiResponse<LikeResponse>> {
     const response = await apiClient.post(`/api/likes/comments/${commentId}`);
     return response.data;
   }

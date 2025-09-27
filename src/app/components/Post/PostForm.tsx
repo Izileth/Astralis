@@ -10,7 +10,7 @@ import { PostFileUpload } from '../Common/PostFileUpload';
 import { TagInput } from '../Common/TagInput';
 import { TiptapEditor } from '../Common/TiptapEditor';
 import useAuthStore from '../../store/auth';
-import { useCategories, useTags } from '../../hooks/post';
+import { useCategories, useTags } from '../../hooks/usePost';
 
 // Schema de validação com Zod
 const postSchema = z.object({

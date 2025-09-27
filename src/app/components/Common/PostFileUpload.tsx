@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Text, Flex, IconButton, AspectRatio, Progress, Button } from '@radix-ui/themes';
 import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon, VideoIcon } from '@radix-ui/react-icons';
-import { usePostMediaUpload, useMediaValidation } from '../../hooks/post'; // ajuste o caminho
+import { usePostMediaUpload, useMediaValidation } from '../../hooks/usePost'; // ajuste o caminho
 
 export interface FileWithPreview extends File {
   preview: string;

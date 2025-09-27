@@ -15,9 +15,9 @@ import {
 } from "@radix-ui/react-icons"
 
 import useAuthStore from "../store/auth"
-import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/user"
-import { useDeletePost } from "../hooks/post"
-import { useDeleteComment } from "../hooks/comment"
+import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/useUser"
+import { useDeletePost } from "../hooks/usePost"
+import { useDeleteComment } from "../hooks/useUserComments"
 import type { User, UpdateUser, CreateSocialLink } from "../types"
 import { FileUpload} from "../components/Common/FileUpload";
 import { PostCard } from "../components/Post/PostCard";

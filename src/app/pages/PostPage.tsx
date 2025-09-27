@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { usePost } from '../hooks/post';
+import { usePost } from '../hooks/usePost';
 import { Box, Flex, Heading, Text, Avatar, Spinner, Container, Separator, Badge } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -80,7 +80,7 @@ export function PostPage() {
               radius="full"
             />
             <Box>
-              <Link to={`/author/${post.author.slug}`}>
+              <Link to={`/author/${post?.author?.slug}`}>
                 <Text weight="bold">{post.author?.name || 'Autor Desconhecido'}</Text>
               </Link>
               <Text color="gray" as="p">

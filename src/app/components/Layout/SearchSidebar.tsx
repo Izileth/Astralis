@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Flex, Text, TextField, Button, Separator, ScrollArea } from '@radix-ui/themes';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { usePostFilters, useCategories, useTags } from '../../hooks/post';
+import { usePostFilters, useCategories, useTags } from '../../hooks/usePost';
 
 export function SearchSidebar() {
   const { applyFilters, resetFilters, currentFilters } = usePostFilters();

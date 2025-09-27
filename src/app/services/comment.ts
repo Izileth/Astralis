@@ -1,9 +1,8 @@
-
 import apiClient from './api';
-import type { 
-  Comment, 
-  CreateComment, 
-  UpdateComment, 
+import type {
+  Comment,
+  CreateComment,
+  UpdateComment,
   ApiResponse,
 } from '../types';
 

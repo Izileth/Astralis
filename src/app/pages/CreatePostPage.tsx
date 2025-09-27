@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Card } from '@radix-ui/themes';
-import { useCreatePost } from '../hooks/post';
+import { useCreatePost } from '../hooks/usePost';
 import { PostForm } from '../components/Post/PostForm';
 import type { PostFormData } from '../components/Post/PostForm';
 
