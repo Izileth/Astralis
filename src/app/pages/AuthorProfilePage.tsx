@@ -1,11 +1,12 @@
 
 import { useParams } from "react-router-dom"
-import { Text, Avatar, Badge, Tabs, Spinner,  Heading, Flex, Container } from "@radix-ui/themes"
+import { Text, Avatar, Badge, Tabs, Heading, Flex, Container } from "@radix-ui/themes"
 import { PersonIcon, HeartIcon, ChatBubbleIcon } from "@radix-ui/react-icons"
 
 import { useUserProfile } from "../hooks/useUser"
 import { useAuthorPosts } from "../hooks/usePost"
 import { PostCard } from "../components/Post/PostCard"
+import { ProfilePageSkeleton, PostListSkeleton } from "../components/Common/Skeleton";
 
 export function AuthorProfilePage() {
   const { slug } = useParams<{ slug: string }>()
@@ -13,11 +14,7 @@ export function AuthorProfilePage() {
   const { posts, loading: postsLoading, error: postsError } = useAuthorPosts(user?.id, undefined, !!user)
 
   if (userLoading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '80vh' }}>
-        <Spinner size="3" />
-      </Flex>
-    )
+    return <ProfilePageSkeleton />
   }
 
   if (userError) {
@@ -175,9 +172,7 @@ export function AuthorProfilePage() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-light text-foreground heading-refined">Publicações</h2>
                 {postsLoading ? (
-                  <Flex align="center" justify="center" style={{ minHeight: '200px' }}>
-                    <Spinner size="3" />
-                  </Flex>
+                  <PostListSkeleton />
                 ) : postsError ? (
                   <Text color="red">Erro ao carregar as publicações.</Text>
                 ) : posts && posts.length > 0 ? (

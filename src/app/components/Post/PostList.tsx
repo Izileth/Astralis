@@ -2,7 +2,7 @@ import React from 'react';
 import { usePosts, usePagination } from '../../hooks/usePost';
 import { PostCard } from './PostCard';
 import { Grid, Flex, Button, Text, Spinner, Box, Heading } from '@radix-ui/themes';
-
+import { PostListSkeleton } from '../Common/Skeleton';
 interface PostListProps {
   isOwner?: boolean;
 }
@@ -19,7 +19,7 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
   if (loading && posts.length === 0) {
     return (
       <Flex align="center" justify="center" py="8">
-        <Spinner size="3" />
+        <PostListSkeleton/>
       </Flex>
     );
   }

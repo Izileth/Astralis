@@ -34,6 +34,9 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
         <Flex align="center" gap="3">
           {/* Hamburger icon for mobile */}
 
+        {/* Mobile Sidebar */}
+        <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          
           <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
             <Text size="5" weight="bold">Astralis</Text>
           </Link>
@@ -75,9 +78,6 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
               <MagnifyingGlassIcon width="18" height="18" />
             </IconButton>
           </Box>
-
-        {/* Mobile Sidebar */}
-        <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </header>
     </Flex>
   );

@@ -8,23 +8,19 @@ import {
   Heading,
   Text,
   Avatar,
-  Spinner,
   Box,
   Badge,
   Separator
 } from '@radix-ui/themes';
+import { ProfilePageSkeleton, PostListSkeleton } from '../components/Common/Skeleton';
 
 export function UserPage() {
   const { slug } = useParams<{ slug: string }>();
   const { user, isLoading: isLoadingUser, error: userError } = useUserProfile(slug);
-  const {  loading: isLoadingPosts, error: postsError } = useAuthorPosts(user?.id, { published: true }, !!user?.id);
+  const { loading: isLoadingPosts, error: postsError } = useAuthorPosts(user?.id, { published: true }, !!user?.id);
 
   if (isLoadingUser) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '80vh' }}>
-        <Spinner size="3" />
-      </Flex>
-    );
+    return <ProfilePageSkeleton />;
   }
 
   if (userError || !user) {
@@ -59,7 +55,7 @@ export function UserPage() {
         {/* Lista de Posts */}
         <Box>
           <Heading mb="4">Publicações de {user.name}</Heading>
-          {isLoadingPosts && <Spinner />}
+          {isLoadingPosts && <PostListSkeleton />}
           {postsError && <Text color="red">Erro ao carregar posts: {postsError}</Text>}
           {!isLoadingPosts && !postsError && (
             <PostList />

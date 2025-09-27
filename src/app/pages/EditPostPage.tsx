@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Heading, Card, Flex, Spinner, Text } from '@radix-ui/themes';
+import { Container, Heading, Card, Text } from '@radix-ui/themes';
 import { usePost, useUpdatePost } from '../hooks/usePost';
 import { PostForm } from '../components/Post/PostForm';
 import type { PostFormData } from '../components/Post/PostForm';
+import { EditPostPageSkeleton } from '../components/Common/Skeleton';
 
 export function EditPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +24,7 @@ export function EditPostPage() {
   };
 
   if (isLoadingPost) {
-    return <Flex justify="center" py="8"><Spinner size="3" /></Flex>;
+    return <EditPostPageSkeleton />;
   }
 
   if (postError || !post) {

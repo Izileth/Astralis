@@ -24,8 +24,6 @@ class PostService {
     try {
       const response = await apiClient.get('/api/posts', { params });
       
-      console.log('API Response:', response.data);
-      
       return {
         success: true,
         data: response.data

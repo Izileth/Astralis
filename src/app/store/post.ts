@@ -200,19 +200,12 @@ export const usePostStore = create<PostStore>()(
           }));
           
           try {
-            console.log('Chamando API com params:', params);
             const response = await postService.findAll(params);
-            
-            console.log('Resposta da API:', response);
-            
             if (response.success && response.data) {
               const { posts, total } = response.data;
               const page = params?.page ?? 1;
               const limit = params?.limit ?? 10;
-
               const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
-
-              console.log('Posts processados:', { posts, total, totalPages });
 
               set({
                 posts,
@@ -230,7 +223,6 @@ export const usePostStore = create<PostStore>()(
               throw new Error(response.message || 'Erro ao buscar posts');
             }
           } catch (error) {
-            console.error('Erro no fetchPosts:', error);
             set(state => ({
               loading: { ...state.loading, posts: false },
               errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
@@ -541,26 +533,191 @@ export const usePostStore = create<PostStore>()(
         },
         
         fetchPostsByCategory: async (categoryName, params) => {
-          set(state => ({ currentFilters: { ...state.currentFilters, categoryName } }));
-          await get().fetchPosts({ ...params, categoryName });
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null },
+            currentFilters: { ...state.currentFilters, categoryName }
+          }));
+
+          try {
+            const response = await postService.findByCategory(categoryName, params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchPostsByTag: async (tagName, params) => {
-          set(state => ({ currentFilters: { ...state.currentFilters, tagNames: [tagName] } }));
-          await get().fetchPosts({ ...params, tagNames: [tagName] });
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null },
+            currentFilters: { ...state.currentFilters, tagNames: [tagName] }
+          }));
+
+          try {
+            const response = await postService.findByTag(tagName, params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchPostsByAuthor: async (authorId, params) => {
-          set(state => ({ currentFilters: { ...state.currentFilters, authorId } }));
-          await get().fetchPosts({ ...params, authorId });
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null },
+            currentFilters: { ...state.currentFilters, authorId }
+          }));
+
+          try {
+            const response = await postService.findByAuthor(authorId, params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchMostLikedPosts: async (params) => {
-          await get().fetchPosts(params);
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null }
+          }));
+
+          try {
+            const response = await postService.getMostLiked(params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchRecentPosts: async (params) => {
-          await get().fetchPosts(params);
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null }
+          }));
+
+          try {
+            const response = await postService.getRecent(params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchStats: async () => {
@@ -589,8 +746,41 @@ export const usePostStore = create<PostStore>()(
         },
         
         searchPosts: async (query, params) => {
-          set(state => ({ currentFilters: { ...state.currentFilters, search: query } }));
-          await get().fetchPosts({ ...params, search: query });
+          set(state => ({
+            loading: { ...state.loading, posts: true },
+            errors: { ...state.errors, posts: null },
+            currentFilters: { ...state.currentFilters, search: query }
+          }));
+
+          try {
+            const response = await postService.search(query, params);
+            if (response.success && response.data) {
+              const { posts, total } = response.data;
+              const page = params?.page ?? 1;
+              const limit = params?.limit ?? 10;
+              const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+              set({
+                posts,
+                pagination: {
+                  page,
+                  limit,
+                  total,
+                  totalPages,
+                  hasNext: page < totalPages,
+                  hasPrev: page > 1,
+                },
+                loading: { ...get().loading, posts: false }
+              });
+            } else {
+              throw new Error(response.message || 'Erro ao buscar posts');
+            }
+          } catch (error) {
+            set(state => ({
+              loading: { ...state.loading, posts: false },
+              errors: { ...state.errors, posts: error instanceof Error ? error.message : 'Erro desconhecido' }
+            }));
+          }
         },
         
         fetchSimilarPosts: async (id) => {
@@ -730,7 +920,9 @@ export const usePostStore = create<PostStore>()(
       }
     ),
     {
-      name: 'post-store',
-    }
-  )
-);
+              name: 'post-store',
+          }
+        )
+      );
+      
+      

@@ -1,23 +1,19 @@
 import { useParams, Link } from 'react-router-dom';
 import { usePost } from '../hooks/usePost';
-import { Box, Flex, Heading, Text, Avatar, Spinner, Container, Separator, Badge } from '@radix-ui/themes';
+import { Box, Flex, Heading, Text, Avatar, Container, Separator, Badge } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { HeartIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { Carousel } from '../components/Common/Carousel';
+import { PostPageSkeleton } from '../components/Common/Skeleton';
 
 export function PostPage() {
   const { slug } = useParams<{ slug: string }>();
   // O segundo argumento `true` indica que a busca deve ser pelo slug
   const { post, loading, error } = usePost(slug, true);
-  console.log(post)
 
   if (loading) {
-    return (
-      <Flex align="center" justify="center" style={{ height: '80vh' }}>
-        <Spinner size="3" />
-      </Flex>
-    );
+    return <PostPageSkeleton />;
   }
 
   if (error) {

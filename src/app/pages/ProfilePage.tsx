@@ -13,7 +13,7 @@ import {
   HeartIcon,
   ChatBubbleIcon,
 } from "@radix-ui/react-icons"
-
+import { ProfilePageSkeleton } from "../components/Common/Skeleton";
 import useAuthStore from "../store/auth"
 import { useCurrentUser, useFollowers, useFollowing, useSocialLinks } from "../hooks/useUser"
 import { useDeletePost } from "../hooks/usePost"
@@ -302,12 +302,7 @@ export function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <Text className="text-xl font-light text-foreground heading-refined">Loading your profile...</Text>
-        </div>
-      </div>
+      <ProfilePageSkeleton/>
     )
   }
 
