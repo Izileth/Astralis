@@ -50,23 +50,6 @@ export const useLikeStore = create<LikeState>((set, get) => ({
 
     try {
       await likeService.likePost({ postId });
-      
-      // Atualiza o estado local otimisticamente
-      set((state) => {
-        const currentLikes = state.postLikes[postId] || { count: 0, isLikedByCurrentUser: false };
-        return {
-          postLikes: {
-            ...state.postLikes,
-            [postId]: {
-              count: currentLikes.count + 1,
-              isLikedByCurrentUser: true
-            }
-          },
-          postLikeLoading: { ...state.postLikeLoading, [postId]: false }
-        };
-      });
-
-      // Busca os dados atualizados do servidor
       await get().fetchPostLikes(postId);
     } catch (error: any) {
       set((state) => ({
@@ -84,23 +67,6 @@ export const useLikeStore = create<LikeState>((set, get) => ({
 
     try {
       await likeService.unlikePost({ postId });
-      
-      // Atualiza o estado local otimisticamente
-      set((state) => {
-        const currentLikes = state.postLikes[postId] || { count: 0, isLikedByCurrentUser: true };
-        return {
-          postLikes: {
-            ...state.postLikes,
-            [postId]: {
-              count: Math.max(currentLikes.count - 1, 0),
-              isLikedByCurrentUser: false
-            }
-          },
-          postLikeLoading: { ...state.postLikeLoading, [postId]: false }
-        };
-      });
-
-      // Busca os dados atualizados do servidor
       await get().fetchPostLikes(postId);
     } catch (error: any) {
       set((state) => ({
@@ -153,23 +119,6 @@ export const useLikeStore = create<LikeState>((set, get) => ({
 
     try {
       await likeService.likeComment(commentId);
-      
-      // Atualiza o estado local otimisticamente
-      set((state) => {
-        const currentLikes = state.commentLikes[commentId] || { count: 0, isLikedByCurrentUser: false };
-        return {
-          commentLikes: {
-            ...state.commentLikes,
-            [commentId]: {
-              count: currentLikes.count + 1,
-              isLikedByCurrentUser: true
-            }
-          },
-          commentLikeLoading: { ...state.commentLikeLoading, [commentId]: false }
-        };
-      });
-
-      // Busca os dados atualizados do servidor
       await get().fetchCommentLikes(commentId);
     } catch (error: any) {
       set((state) => ({
@@ -187,23 +136,6 @@ export const useLikeStore = create<LikeState>((set, get) => ({
 
     try {
       await likeService.unlikeComment(commentId);
-      
-      // Atualiza o estado local otimisticamente
-      set((state) => {
-        const currentLikes = state.commentLikes[commentId] || { count: 0, isLikedByCurrentUser: true };
-        return {
-          commentLikes: {
-            ...state.commentLikes,
-            [commentId]: {
-              count: Math.max(currentLikes.count - 1, 0),
-              isLikedByCurrentUser: false
-            }
-          },
-          commentLikeLoading: { ...state.commentLikeLoading, [commentId]: false }
-        };
-      });
-
-      // Busca os dados atualizados do servidor
       await get().fetchCommentLikes(commentId);
     } catch (error: any) {
       set((state) => ({

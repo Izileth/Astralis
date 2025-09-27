@@ -9,7 +9,7 @@ interface UseCommentsReturn {
   error: string | null;
   
   // Actions
-  createComment: (data: CreateComment) => Promise<Comment | null>;
+  createComment: (data: UpdateComment) => Promise<Comment | null>;
   updateComment: (id: string, data: UpdateComment) => Promise<Comment | null>;
   deleteComment: (id: string) => Promise<boolean>;
   refreshComments: () => Promise<Comment[] | null>;
@@ -33,7 +33,7 @@ export const useComments = (postId: string): UseCommentsReturn => {
 
   // Criar comentário
   const createComment = useCallback(
-    async (data: CreateComment) => {
+    async (data: UpdateComment) => {
       // Garantir que o postId esteja correto
       return await storeCreateComment({ ...data, postId });
     },

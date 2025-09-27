@@ -114,121 +114,111 @@ export function SearchSidebar({
   const hasFilters: boolean = Boolean(searchTerm || selectedCategory || selectedTags.length > 0);
 
   return (
-    <Box className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col shadow-lg">
+    <Box className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
       {/* Header */}
-      <Box className="px-6 py-4 bg-red-600">
+      <Box className="px-6 py-4 border-b border-gray-200">
         <Flex align="center" justify="between">
-          <Text size="4" weight="bold" className="text-white font-serif">
-            FILTROS
+          <Text size="4" weight="bold" className="font-serif text-red-600 uppercase tracking-wide">
+            Filtros
           </Text>
           {hasFilters && (
             <Button
-              size="1"
               variant="ghost"
+              size="2"
               onClick={handleReset}
-              className="text-white hover:bg-red-700 p-1"
+              className="text-gray-600 hover:text-red-600 hover:bg-red-50"
             >
-              <Cross2Icon width="14" height="14" />
+              <Cross2Icon width="16" height="16" />
             </Button>
           )}
         </Flex>
       </Box>
 
       <ScrollArea className="flex-grow">
-        <Box className="p-6 space-y-6">
+        <Box className="p-6">
           {/* Search Input */}
-          <Box>
+          <Box className="mb-6">
             <Text 
               as="label" 
               size="2" 
               weight="bold" 
-              className="text-black font-serif mb-3 block uppercase tracking-wide text-sm"
+              className="block mb-3 text-gray-500 font-sans uppercase tracking-wider text-xs"
             >
               Buscar Notícias
             </Text>
-            <Box className="relative">
+            <Flex align="center" pt={'2'} gap="2">
               <TextField.Root
-                size="3"
                 placeholder="Digite palavras-chave..."
                 value={searchTerm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
-                className="w-full border-2 border-gray-300 focus:border-red-500 rounded-none font-sans text-black placeholder:text-gray-500"
+                className="flex-1"
               />
               <Button
-                size="2"
                 variant="ghost"
                 onClick={handleSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
-                <MagnifyingGlassIcon width="18" height="18" />
+                <MagnifyingGlassIcon width="16" height="16" />
               </Button>
-            </Box>
+            </Flex>
           </Box>
 
-          {/* Divider */}
-          <Box className="border-b border-gray-200"></Box>
+          <Separator size="4" className="my-6" />
 
           {/* Categories */}
-          <Box>
+          <Box className="mb-6">
             <Text 
               as="label" 
               size="2" 
               weight="bold" 
-              className="text-black font-serif mb-4 block uppercase tracking-wide text-sm"
+              className="block mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
             >
               Editorias
             </Text>
-            <Flex direction="column" gap="2">
+            <div className='flex justify-start gap-1 pt-2 items-center flex-wrap '>
               {categories.map((category: Category) => (
                 <Button
                   key={category.id}
-                  size="2"
+                  color='tomato'
                   variant="ghost"
                   onClick={() => handleCategoryChange(category.name)}
                   className={`
-                    w-full justify-start px-3 py-3 rounded-none border-l-4 font-sans font-medium
+                    w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium
+                    border-l-4 border-transparent hover:border-l-red-600 hover:bg-red-50
                     ${selectedCategory === category.name 
                       ? 'border-l-red-600 bg-red-50 text-red-700' 
-                      : 'border-l-gray-200 text-black hover:border-l-red-300 hover:bg-gray-50'
+                      : 'text-black hover:text-red-700'
                     }
-                    transition-all duration-200
                   `}
                 >
                   {category.name}
                 </Button>
               ))}
-            </Flex>
+            </div>
           </Box>
 
-          {/* Divider */}
-          <Box className="border-b border-gray-200"></Box>
+          <Separator size="4" className="my-6" />
 
           {/* Tags */}
-          <Box>
+          <Box className="mb-6">
             <Text 
               as="label" 
               size="2" 
               weight="bold" 
-              className="text-black font-serif mb-4 block uppercase tracking-wide text-sm"
+              className="block mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
             >
               Assuntos
             </Text>
-            <Flex wrap="wrap" gap="2">
+            <Flex wrap="wrap" pt={'2'} gap="2">
               {tags.map((tag: Tag) => (
                 <Button
                   key={tag.id}
                   size="1"
-                  variant="outline"
+                  variant={selectedTags.includes(tag.name) ? "solid" : "outline"}
+                  color={selectedTags.includes(tag.name) ? "red" : "gray"}
                   onClick={() => handleTagChange(tag.name)}
-                  className={`
-                    px-3 py-2 rounded-full font-sans text-xs font-medium border-2
-                    ${selectedTags.includes(tag.name)
-                      ? 'bg-red-600 border-red-600 text-white hover:bg-red-700'
-                      : 'bg-white border-gray-300 text-black hover:border-red-600 hover:text-red-600'
-                    }
-                    transition-all duration-200
-                  `}
+                  className="font-sans text-xs transition-all duration-200"
                 >
                   #{tag.name}
                 </Button>
@@ -239,25 +229,29 @@ export function SearchSidebar({
           {/* Active Filters Summary */}
           {hasFilters && (
             <>
-              <Box className="border-b border-gray-200"></Box>
-              <Box className="bg-gray-50 p-4 rounded-sm">
-                <Text size="2" weight="bold" className="text-black font-serif mb-2 block text-xs uppercase tracking-wide">
+              <Separator size="4" className="my-6" />
+              <Box className="p-4 bg-gray-50 rounded">
+                <Text 
+                  size="2" 
+                  weight="bold" 
+                  className="block mb-3 text-gray-500 font-sans uppercase tracking-wider text-xs"
+                >
                   Filtros Ativos
                 </Text>
                 <Flex direction="column" gap="1">
                   {searchTerm && (
                     <Text size="1" className="text-gray-700 font-sans">
-                      Busca: "{searchTerm}"
+                      Busca: <Text weight="medium">"{searchTerm}"</Text>
                     </Text>
                   )}
                   {selectedCategory && (
                     <Text size="1" className="text-gray-700 font-sans">
-                      Editoria: {selectedCategory}
+                      Editoria: <Text weight="medium">{selectedCategory}</Text>
                     </Text>
                   )}
                   {selectedTags.length > 0 && (
                     <Text size="1" className="text-gray-700 font-sans">
-                      Assuntos: {selectedTags.join(', ')}
+                      Assuntos: <Text weight="medium">{selectedTags.join(', ')}</Text>
                     </Text>
                   )}
                 </Flex>
@@ -268,15 +262,15 @@ export function SearchSidebar({
       </ScrollArea>
 
       {/* Footer */}
-      <Box className="p-6 border-t border-gray-200 bg-gray-50">
+      <Box className="p-6 border-t border-gray-200">
         <Button
-          size="3"
           variant="outline"
+          color="red"
           onClick={handleReset}
           disabled={!hasFilters}
-          className="w-full border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-sans font-medium rounded-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full font-sans font-medium transition-all duration-200"
         >
-          LIMPAR TODOS OS FILTROS
+          Limpar Todos os Filtros
         </Button>
       </Box>
     </Box>

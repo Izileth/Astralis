@@ -31,15 +31,21 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
       }}
     >
       <header>
-        <Flex align="center" gap="3">
-          {/* Hamburger icon for mobile */}
-
-        {/* Mobile Sidebar */}
+                {/* Mobile Sidebar */}
         <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          <Box display={{ initial: 'block', sm: 'none' }}>
+              {/* Hamburger icon for mobile */}
+            <IconButton variant="ghost" color="gray" onClick={() => setIsSidebarOpen(true)}>
+              <HamburgerMenuIcon width="18" height="18" />
+            </IconButton>
+          </Box>
           
+        <Flex align="center" gap="3">
+
           <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
             <Text size="5" weight="bold">Astralis</Text>
           </Link>
+          
         </Flex>
 
         <Flex align="center" gap="3" display={{ initial: 'none', sm: 'flex' }}>
@@ -49,7 +55,7 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
           {isAuthenticated ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>  
-                <Button variant="ghost" radius="full">
+                <Button color='tomato' variant="ghost" radius="full">
                   <Avatar
                     size="2"
                     src={user?.avatarUrl || undefined}
@@ -58,7 +64,7 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
-                <DropdownMenu.Item onClick={() => navigate('/profile')}>Meu Perfil</DropdownMenu.Item>
+                <DropdownMenu.Item color='red'   onClick={() => navigate('/profile')}>Meu Perfil</DropdownMenu.Item>
                 <DropdownMenu.Separator />
                 <DropdownMenu.Item color="red" onClick={handleLogout}>Sair</DropdownMenu.Item>
               </DropdownMenu.Content>
@@ -71,9 +77,6 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
           )}
         </Flex>
           <Box display={{ initial: 'block', sm: 'none' }}>
-            <IconButton variant="ghost" color="gray" onClick={() => setIsSidebarOpen(true)}>
-              <HamburgerMenuIcon width="18" height="18" />
-            </IconButton>
             <IconButton variant="ghost" color="gray" onClick={onSearchIconClick}>
               <MagnifyingGlassIcon width="18" height="18" />
             </IconButton>

@@ -498,7 +498,7 @@ export function ProfilePage() {
                 {user.posts && user.posts.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {user.posts.map((post) => (
-                      <PostCard key={post.id} post={post} isOwner={true} onDelete={() => setDeletePostDialogOpen(post.id)} />
+                      <PostCard key={post.id} post={post} author={user} isOwner={true} onDelete={() => setDeletePostDialogOpen(post.id)} />
                     ))}
                   </div>
                 ) : (

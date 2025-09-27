@@ -1,17 +1,18 @@
 import { HeartIcon } from '@radix-ui/react-icons';
 import { Flex, Text, IconButton } from '@radix-ui/themes';
-import { usePostLikes } from '../../hooks/useLikes';
+import { useCommentLikes } from '../../hooks/useLikes';
 
-interface LikeButtonProps {
-  postId: string;
+interface CommentLikeButtonProps {
+  commentId: string;
 }
 
-export function LikeButton({ postId }: LikeButtonProps) {
-  const { isLiked, likeCount, toggle, loading, error } = usePostLikes(postId);
+export function CommentLikeButton({ commentId }: CommentLikeButtonProps) {
+  const { isLiked, likeCount, toggle, loading, error } = useCommentLikes(commentId);
 
   return (
     <Flex align="center" gap="2">
       <IconButton 
+        size="1"
         variant="ghost" 
         onClick={(e) => { 
           e.preventDefault(); 
@@ -21,9 +22,9 @@ export function LikeButton({ postId }: LikeButtonProps) {
         disabled={loading}
         color={isLiked ? 'red' : 'gray'}
       >
-        <HeartIcon width="18" height="18" fill={isLiked ? 'currentColor' : 'none'} />
+        <HeartIcon fill={isLiked ? 'currentColor' : 'none'} />
       </IconButton>
-      <Text size="2">{likeCount}</Text>
+      <Text size="1">{likeCount}</Text>
       {error && <Text size="1" color="red">{error}</Text>}
     </Flex>
   );

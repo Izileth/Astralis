@@ -18,9 +18,8 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
 
   if (loading && posts.length === 0) {
     return (
-      <Flex align="center" justify="center" py="8">
+  
         <PostListSkeleton/>
-      </Flex>
     );
   }
 

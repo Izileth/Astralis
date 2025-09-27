@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { Post, User } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Pencil1Icon, HeartIcon, ChatBubbleIcon, TrashIcon, ClockIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, ChatBubbleIcon, TrashIcon, ClockIcon } from '@radix-ui/react-icons';
 import { Carousel } from '../Common/Carousel';
+import { LikeButton } from '../Common/LikeButton';
 
 interface PostCardProps {
   post: Post;
@@ -161,15 +162,7 @@ export function PostCard({ post, author, isOwner = false, onDelete }: PostCardPr
           {/* Estatísticas */}
           <Flex align="center" justify="between" className="pt-3 border-t border-gray-100">
             <Flex gap="6">
-              <Flex align="center" gap="2" className="text-gray-500 hover:text-red-600 transition-colors duration-200 cursor-pointer">
-                <HeartIcon width="16" height="16" />
-                <Text size="2" weight="medium" className="font-sans">
-                  {post._count?.likes || 0}
-                </Text>
-                <Text size="1" className="text-gray-400 font-sans">
-                  curtidas
-                </Text>
-              </Flex>
+              <LikeButton postId={post.id} />
               
               <Flex align="center" gap="2" className="text-gray-500 hover:text-red-600 transition-colors duration-200 cursor-pointer">
                 <ChatBubbleIcon width="16" height="16" />
