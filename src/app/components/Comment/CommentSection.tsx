@@ -21,7 +21,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <Box mt="6">
-      <Heading mb="4">Comentários ({comments.length})</Heading>
+      <Heading mb="4">Comentários - {comments.length}</Heading>
       
       {user ? (
         <Box mb="5">

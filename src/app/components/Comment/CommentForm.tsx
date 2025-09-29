@@ -41,6 +41,7 @@ export function CommentForm({
           onChange={(e) => setContent(e.target.value)}
           placeholder="Escreva seu comentário..."
           required
+    
           rows={3}
         />
         <Flex justify="end" gap="3">
@@ -49,7 +50,8 @@ export function CommentForm({
               Cancelar
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting || !content.trim()}>
+          <Button style={{       background: '#dc2626',
+            color: 'white',}} type="submit" disabled={isSubmitting || !content.trim()}>
             {isSubmitting ? 'Enviando...' : submitButtonText}
           </Button>
         </Flex>

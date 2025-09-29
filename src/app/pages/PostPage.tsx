@@ -199,15 +199,7 @@ export function PostPage() {
         />
 
         {/* Divisor antes dos comentários */}
-        <Box className="border-t-4 border-red-600 pt-8 mt-12">
-          <Text 
-            size="4" 
-            weight="bold" 
-            className="font-serif text-black mb-6"
-          >
-            Comentários
-          </Text>
-        </Box>
+        <Box className="border-t-2 border-red-600 border-h-1"></Box>
 
         {/* Seção de Comentários */}
         <CommentSection postId={post.id} />

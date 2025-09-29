@@ -1,10 +1,10 @@
-import { Flex, Box, Button, Avatar, Text, DropdownMenu, IconButton } from '@radix-ui/themes';
-import { Link, useNavigate } from 'react-router-dom';
+import { Flex, Box, Button, Avatar, DropdownMenu, IconButton } from '@radix-ui/themes';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import useAuthStore from '../../store/auth';
 import { MobileSidebar } from './MobileSidebar';
 import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-
+import Logo from '../Common/BrandIcon';
 export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSearchIconClick: () => void, onDesktopSearchIconClick: () => void }) {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -42,9 +42,7 @@ export function Header({ onSearchIconClick, onDesktopSearchIconClick }: { onSear
           
         <Flex align="center" gap="3">
 
-          <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
-            <Text size="5" weight="bold">Astralis</Text>
-          </Link>
+        <Logo href='/' size='lg' variant='minimal'/>
           
         </Flex>
 
