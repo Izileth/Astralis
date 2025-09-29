@@ -3,7 +3,7 @@ import { TextArea, Button, Flex } from '@radix-ui/themes';
 import type { CreateComment, UpdateComment } from '../../types';
 
 interface CommentFormProps {
-  onSubmit: (data: Partial<CreateComment | UpdateComment>) => Promise<any>;
+  onSubmit: (data: { content: string }) => Promise<any>;
   initialData?: { content: string };
   isSubmitting?: boolean;
   submitButtonText?: string;
