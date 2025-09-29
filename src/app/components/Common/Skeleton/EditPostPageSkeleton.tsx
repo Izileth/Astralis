@@ -1,4 +1,4 @@
-import { Container, Card, Flex, Box } from '@radix-ui/themes';
+import { Container, Card, Flex } from '@radix-ui/themes';
 
 export function EditPostPageSkeleton() {
   return (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useCommentStore } from '../store/comment';
-import type { CreateComment, UpdateComment, Comment } from '../types';
+import type { UpdateComment, Comment } from '../types';
 
 interface UseCommentsReturn {
   // Estado
@@ -9,7 +9,7 @@ interface UseCommentsReturn {
   error: string | null;
   
   // Actions
-  createComment: (data: UpdateComment) => Promise<Comment | null>;
+  createComment: (data: { content: string }) => Promise<Comment | null>;
   updateComment: (id: string, data: UpdateComment) => Promise<Comment | null>;
   deleteComment: (id: string) => Promise<boolean>;
   refreshComments: () => Promise<Comment[] | null>;
@@ -33,7 +33,10 @@ export const useComments = (postId: string): UseCommentsReturn => {
 
   // Criar comentário
   const createComment = useCallback(
-    async (data: UpdateComment) => {
+    async (data: { content: string }) => {
+      if (!data.content?.trim()) {
+        return null; // Não cria comentário vazio
+      }
       // Garantir que o postId esteja correto
       return await storeCreateComment({ ...data, postId });
     },

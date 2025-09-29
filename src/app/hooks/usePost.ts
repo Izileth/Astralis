@@ -500,18 +500,11 @@ export const usePostFilters = () => {
     return applyFilters(newFilters);
   }, [currentFilters, applyFilters]);
 
-  const removeFilter = useCallback((key: keyof PostsParams) => {
-    const newFilters = { ...currentFilters };
-    delete newFilters[key];
-    return applyFilters(newFilters);
-  }, [currentFilters, applyFilters]);
-
   return {
     currentFilters,
     applyFilters,
     resetFilters,
     addFilter,
-    removeFilter,
   };
 };
 

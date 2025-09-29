@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePosts, usePagination } from '../../hooks/usePost';
 import { PostCard } from './PostCard';
-import { Grid, Flex, Button, Text, Spinner, Box, Heading } from '@radix-ui/themes';
+import { Grid, Flex, Button, Text, Box, Heading } from '@radix-ui/themes';
 import { PostListSkeleton } from '../Common/Skeleton';
 interface PostListProps {
   isOwner?: boolean;

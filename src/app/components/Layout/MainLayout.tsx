@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Box, Flex, IconButton } from '@radix-ui/themes';
+import { Box, Flex} from '@radix-ui/themes';
 import { SearchSidebar } from './SearchSidebar';
 import { Header } from './Header';
-import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 interface MainLayoutProps {
   children: React.ReactNode;

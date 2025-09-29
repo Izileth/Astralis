@@ -1,6 +1,6 @@
 
 import { useParams } from "react-router-dom"
-import { Text, Avatar, Badge, Tabs, Heading, Flex, Container } from "@radix-ui/themes"
+import { Text, Avatar, Badge, Tabs, Heading, Container } from "@radix-ui/themes"
 import { PersonIcon, HeartIcon, ChatBubbleIcon } from "@radix-ui/react-icons"
 
 import { useUserProfile } from "../hooks/useUser"
