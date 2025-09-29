@@ -292,7 +292,7 @@ const useUserStore = create<UserStore>()(
   removeSocialLink: async (userId: string, socialLinkId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await userService.removeSocialLink(userId, socialLinkId);
+      await userService.removeSocialLink(userId);
       set((state) => ({
         socialLinks: state.socialLinks.filter(link => link.id !== socialLinkId),
         isLoading: false

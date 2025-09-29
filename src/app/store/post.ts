@@ -390,7 +390,7 @@ export const usePostStore = create<PostStore>()(
         
         togglePublish: async (id) => {
           const originalPosts = get().posts;
-          const originalCurrentPost = get().currentPost;
+      
           const postToToggle = originalPosts.find(p => p.id === id);
   
           if (!postToToggle) return null;
@@ -416,11 +416,7 @@ export const usePostStore = create<PostStore>()(
               throw new Error(response.message || 'Erro ao alterar status de publicação');
             }
           } catch (error) {
-            // Revert on error
-            set(state => ({
-              posts: originalPosts,
-              currentPost: originalCurrentPost,
-            }));
+
             console.error('Erro ao alterar status:', error);
             return null;
           }
