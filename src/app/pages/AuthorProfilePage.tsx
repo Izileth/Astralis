@@ -155,16 +155,7 @@ export function AuthorProfilePage() {
                 <p className="text-lg text-muted-foreground text-refined leading-relaxed">
                   {user.bio || "Nenhuma biografia disponível."}
                 </p>
-                <div className="pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Membro Desde{" "}
-                    {new Date(user.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
+          
               </div>
             </Tabs.Content>
 

@@ -59,14 +59,28 @@ function EditProfileDialog({
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Content className="max-w-lg bg-card border border-border shadow-refined-lg">
-        <Dialog.Title className="text-2xl font-light text-foreground heading-refined">Edit Profile</Dialog.Title>
+        <Dialog.Title className="text-2xl font-light text-foreground heading-refined mb-0 pb-0">Atualizar Perfil</Dialog.Title>
         <Dialog.Description className="text-muted-foreground text-refined mb-6">
-          Update your personal information with refined elegance
+          Mude o seu visual com estilo!
         </Dialog.Description>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Name</Text>
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+
+
+    
+          <div className="space-y-2 flex flex-col justify-center items-center">
+            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, avatarUrl: url }))} variant="avatar" />
+          </div>
+
+
+          <div className="space-y-2 flex flex-col justify-center items-center ">
+    
+            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))} variant="banner" />
+          </div>
+    
+
+          <div className="space-y-2 pt-6">
+  
             <TextField.Root
               value={formData.name || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
@@ -77,7 +91,7 @@ function EditProfileDialog({
           </div>
 
           <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Bio</Text>
+      
             <TextArea
               value={formData.bio || ""}
               onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
@@ -87,27 +101,17 @@ function EditProfileDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Avatar</Text>
-            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, avatarUrl: url }))} variant="avatar" />
-          </div>
-
-          <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Banner</Text>
-            <FileUpload onUploadComplete={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))} variant="banner" />
-          </div>
-
-          <div className="space-y-2">
-            <Text className="text-sm font-medium text-foreground">Status</Text>
+          <div className="space-y-2 flex flex-row gap-2">
+      
             <Select.Root
               value={formData.status || "active"}
               onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
             >
               <Select.Trigger className="border-thin border-border focus:border-accent" />
               <Select.Content className="bg-card border border-border shadow-refined">
-                <Select.Item value="active">Active</Select.Item>
-                <Select.Item value="inactive">Inactive</Select.Item>
-                <Select.Item value="busy">Busy</Select.Item>
+                <Select.Item value="active">Ativo</Select.Item>
+                <Select.Item value="inactive">Inativo</Select.Item>
+                <Select.Item value="busy">Ocupado</Select.Item>
               </Select.Content>
             </Select.Root>
           </div>
@@ -120,7 +124,7 @@ function EditProfileDialog({
                 type="button"
                 color="red"
               >
-                Cancel
+                Cancelar
               </Button>
             </Dialog.Close>
             <Button
@@ -129,7 +133,7 @@ function EditProfileDialog({
               className="bg-accent text-white hover:bg-accent/90 shadow-refined"
               disabled={isLoading}
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Salvando.." : "Salvar Mudanças"}
             </Button>
           </div>
         </form>
@@ -470,7 +474,7 @@ export function ProfilePage() {
                 <div className="pt-6 border-t border-border">
                   <p className="text-sm text-muted-foreground">
                     Membro Desde{" "}
-                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                    {new Date(user.createdAt).toLocaleDateString("pt-BR", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",

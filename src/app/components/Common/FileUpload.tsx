@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Text, Flex, IconButton, AspectRatio, Progress, Button } from '@radix-ui/themes';
-import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
-import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/useUser'; // ajuste o caminho
+import { Box, Text, Flex, IconButton, Progress, Button } from '@radix-ui/themes';
+import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/useUser';
 
 export interface FileWithPreview extends File {
   preview: string;
@@ -19,8 +19,8 @@ interface UploadableFile {
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
   variant?: 'post' | 'banner' | 'avatar';
-  multiple?: boolean; // Note: multiple is only for post variant
-  userId?: string; // Para upload de avatar/banner de outros usuários
+  multiple?: boolean;
+  userId?: string;
 }
 
 export function FileUpload({ 
@@ -31,22 +31,19 @@ export function FileUpload({
 }: FileUploadProps) {
   const [files, setFiles] = useState<UploadableFile[]>([]);
   
-  // Hooks para upload
   const { user: currentUser } = useCurrentUser();
   const { uploadUserAvatar, uploadUserBanner, isUploading: globalIsUploading } = useImageUpload();
   const { validateImageFile } = useImageValidation();
   
-  // Estado local de upload
   const [isUploading, setIsUploading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const validatedFiles: UploadableFile[] = [];
 
     acceptedFiles.forEach(file => {
-      // Validar arquivo apenas para avatar e banner
       if (variant !== 'post') {
         const validation = validateImageFile(file, {
-          maxSize: variant === 'banner' ? 10 : 5, // Banner até 10MB, avatar até 5MB
+          maxSize: variant === 'banner' ? 10 : 5,
           acceptedTypes: ['image/jpeg', 'image/png', 'image/webp']
         });
 
@@ -63,7 +60,6 @@ export function FileUpload({
         }
       }
 
-      // Arquivo válido
       validatedFiles.push({
         file: Object.assign(file, {
           preview: URL.createObjectURL(file),
@@ -86,13 +82,11 @@ export function FileUpload({
   });
 
   const handleUpload = async () => {
-    // Filtrar apenas arquivos pendentes
     const pendingFiles = files.filter(f => f.status === 'pending');
     if (pendingFiles.length === 0) return;
 
     setIsUploading(true);
     
-    // Marcar arquivos como 'uploading'
     setFiles(prev => prev.map(f => 
       f.status === 'pending' ? { ...f, status: 'uploading' as const } : f
     ));
@@ -107,7 +101,6 @@ export function FileUpload({
             throw new Error('Usuário não identificado');
           }
 
-          // Simular progresso inicial
           setFiles(prev => prev.map(f => 
             f.file === uploadableFile.file ? { ...f, progress: 10 } : f
           ));
@@ -117,20 +110,16 @@ export function FileUpload({
           } else if (variant === 'banner') {
             result = await uploadUserBanner(targetUserId, uploadableFile.file);
           } else {
-            // Para posts, você pode implementar um serviço específico
-            // Por agora, vamos simular
             await new Promise(resolve => setTimeout(resolve, 1000));
             const mockUrl = `https://picsum.photos/seed/${encodeURIComponent(uploadableFile.file.name)}/800/600`;
             onUploadComplete(mockUrl);
             return { ...uploadableFile, status: 'success' as const, progress: 100 };
           }
 
-          // Progresso completo
           setFiles(prev => prev.map(f => 
             f.file === uploadableFile.file ? { ...f, progress: 100 } : f
           ));
 
-          // Notificar conclusão com a URL da imagem
           const imageUrl = variant === 'avatar' ? result.avatarUrl : result.bannerUrl;
           if (imageUrl) {
             onUploadComplete(imageUrl);
@@ -149,7 +138,6 @@ export function FileUpload({
 
       const results = await Promise.all(uploadPromises);
       
-      // Atualizar estado com resultados
       setFiles(prev => prev.map(f => {
         const result = results.find(r => r.file === f.file);
         return result || f;
@@ -183,206 +171,329 @@ export function FileUpload({
     switch (variant) {
       case 'avatar':
         return {
-          dropzone: { p: '2', width: 128, height: 128, borderRadius: '50%' },
-          thumb: { width: 128, height: 128, borderRadius: '50%' },
-          icon: { width: 32, height: 32 },
+          container: { width: '140px', height: '140px' },
+          dropzone: { 
+            borderRadius: '50%',
+            minHeight: '140px',
+          },
+          thumb: { 
+            width: '140px', 
+            height: '140px', 
+            borderRadius: '50%',
+          },
         };
       case 'banner':
         return {
-          dropzone: { p: '5', height: 160, width: '100%' },
-          thumb: { width: '100%', height: 160 },
-          icon: { width: 48, height: 48 },
+          container: { width: '100%', maxWidth: '600px' },
+          dropzone: { 
+            borderRadius: '12px',
+            minHeight: '180px',
+          },
+          thumb: { 
+            width: '100%', 
+            height: '180px',
+            borderRadius: '12px',
+          },
         };
       case 'post':
       default:
         return {
-          dropzone: { p: '5' },
-          thumb: { width: 100, height: 100 },
-          icon: { width: 24, height: 24 },
+          container: { width: '100%' },
+          dropzone: { 
+            borderRadius: '12px',
+            minHeight: '160px',
+          },
+          thumb: { 
+            width: '120px', 
+            height: '120px',
+            borderRadius: '8px',
+          },
         };
     }
   };
 
   const styles = getVariantStyles();
+  const uploading = isUploading || globalIsUploading;
+  const hasPendingFiles = files.some(f => f.status === 'pending');
+  const hasErrorFiles = files.some(f => f.status === 'error');
+  const hasFiles = files.length > 0;
+
+  const renderStatusOverlay = (uploadableFile: UploadableFile) => {
+    const { status, progress, error } = uploadableFile;
+    
+    if (status === 'uploading') {
+      return (
+        <Flex 
+          align="center" 
+          justify="center"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: 'inherit',
+          }}
+        >
+          <Box style={{ width: '60%', textAlign: 'center' }}>
+            <Progress 
+              value={progress} 
+              style={{ 
+                width: '100%',
+                height: '4px',
+                marginBottom: '8px'
+              }} 
+            />
+            <Text size="1" style={{ color: 'white', fontWeight: '500' }}>
+              {progress}%
+            </Text>
+          </Box>
+        </Flex>
+      );
+    }
+    
+    if (status === 'success') {
+      return (
+        <Flex 
+          align="center" 
+          justify="center"
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            width: '24px',
+            height: '24px',
+            background: 'var(--green-9)',
+            borderRadius: '50%',
+          }}
+        >
+          <CheckCircledIcon style={{ width: '14px', height: '14px', color: 'white' }} />
+        </Flex>
+      );
+    }
+    
+    if (status === 'error') {
+      return (
+        <Flex 
+          align="center" 
+          justify="center"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(239, 68, 68, 0.9)',
+            borderRadius: 'inherit',
+            flexDirection: 'column',
+            gap: '8px',
+            padding: '16px'
+          }}
+        >
+          <ExclamationTriangleIcon style={{ width: '20px', height: '20px', color: 'white' }} />
+          {error && (
+            <Text size="1" style={{ color: 'white', textAlign: 'center', lineHeight: '1.3' }}>
+              {error}
+            </Text>
+          )}
+          <Button 
+            size="1" 
+            variant="solid"
+            color='red'
+            onClick={() => retryUpload(uploadableFile)}
+          >
+            <ReloadIcon style={{ width: '12px', height: '12px' }} />
+            Tentar novamente
+          </Button>
+        </Flex>
+      );
+    }
+    
+    return null;
+  };
 
   const renderThumb = (uploadableFile: UploadableFile) => {
-    const { file, status, progress, error } = uploadableFile;
+    const { file } = uploadableFile;
     
     return (
-      <Box key={file.name} style={{ position: 'relative', ...styles.thumb, overflow: 'hidden' }}>
-        <AspectRatio ratio={variant === 'banner' ? 16 / 9 : 1}>
-          {file.type.startsWith('image/') ? (
-            <img 
-              src={file.preview} 
-              alt={`Preview of ${file.name}`} 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover',
-                opacity: status === 'error' ? 0.5 : 1
-              }} 
-            />
-          ) : (
-            <Flex align="center" justify="center" width="100%" height="100%" style={{ backgroundColor: 'var(--gray-a3)' }}>
-              <ImageIcon style={styles.icon} />
-            </Flex>
-          )}
-        </AspectRatio>
-        
-        {/* Progress bar para upload */}
-        {status === 'uploading' && (
-          <Progress 
-            value={progress} 
+      <Box 
+        key={file.name} 
+        style={{ 
+          position: 'relative',
+          ...styles.thumb,
+          overflow: 'hidden',
+          border: '1px solid var(--gray-a6)',
+        }}
+      >
+        {file.type.startsWith('image/') ? (
+          <img 
+            src={file.preview} 
+            alt={`Preview`}
             style={{ 
-              position: 'absolute', 
-              bottom: 0, 
-              left: 0, 
-              width: '100%' 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover',
             }} 
           />
-        )}
-        
-        {/* Ícone de sucesso */}
-        {status === 'success' && (
-          <CheckCircledIcon 
-            style={{ 
-              position: 'absolute', 
-              top: '50%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)', 
-              color: 'white', 
-              width: 32, 
-              height: 32, 
-              background: 'rgba(34, 197, 94, 0.8)', 
-              borderRadius: '50%',
-              padding: 4
-            }} 
-          />
-        )}
-        
-        {/* Ícone de erro */}
-        {status === 'error' && (
+        ) : (
           <Flex 
             align="center" 
-            justify="center"
+            justify="center" 
             style={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
               width: '100%', 
-              height: '100%',
-              background: 'rgba(239, 68, 68, 0.1)',
-              flexDirection: 'column',
-              gap: '8px'
+              height: '100%', 
+              background: 'var(--gray-a3)' 
             }}
           >
-            <ExclamationTriangleIcon 
-              style={{ 
-                color: 'var(--red-11)', 
-                width: 24, 
-                height: 24
-              }} 
-            />
-            {error && (
-              <Text size="1" color="red" style={{ textAlign: 'center', padding: '0 8px' }}>
-                {error}
-              </Text>
-            )}
-            <Button 
-              size="1" 
-              variant="soft" 
-              color="red"
-              onClick={() => retryUpload(uploadableFile)}
-            >
-              Tentar novamente
-            </Button>
+            <ImageIcon style={{ width: '24px', height: '24px', color: 'var(--gray-a9)' }} />
           </Flex>
         )}
+        
+        {renderStatusOverlay(uploadableFile)}
         
         {/* Botão de remover */}
         <IconButton 
           size="1" 
           variant="solid" 
-          color="gray" 
+          color="gray"
+          highContrast
           onClick={() => removeFile(file)} 
           style={{ 
             position: 'absolute', 
-            top: 4, 
-            right: 4, 
-            cursor: 'pointer' 
+            top: '6px', 
+            right: '6px',
+            width: '24px',
+            height: '24px',
+            background: 'rgba(0, 0, 0, 0.6)',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: uploadableFile.status === 'uploading' ? 0.5 : 1,
+            pointerEvents: uploadableFile.status === 'uploading' ? 'none' : 'auto'
           }} 
-          highContrast
         >
-          <Cross2Icon />
+          <Cross2Icon style={{ width: '12px', height: '12px' }} />
         </IconButton>
       </Box>
     );
   };
 
-  const hasPendingFiles = files.some(f => f.status === 'pending');
-  const hasErrorFiles = files.some(f => f.status === 'error');
-  const uploading = isUploading || globalIsUploading;
+  const renderDropzone = () => (
+    <Box
+      {...getRootProps()}
+      style={{
+        ...styles.dropzone,
+        border: isDragActive 
+          ? '2px solid var(--blue-8)' 
+          : hasFiles && variant !== 'post' 
+            ? 'none' 
+            : '2px dashed var(--gray-a7)',
+        background: isDragActive 
+          ? 'var(--blue-a2)' 
+          : hasFiles && variant !== 'post' 
+            ? 'transparent' 
+            : 'var(--gray-a1)',
+        cursor: uploading ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        opacity: uploading ? 0.6 : 1,
+        pointerEvents: uploading ? 'none' : 'auto',
+        transition: 'all 0.2s ease',
+        position: 'relative',
+      }}
+    >
+      <input {...getInputProps()} />
+      
+      {!hasFiles || variant === 'post' ? (
+        <Flex direction="column" align="center" gap="3">
+          <Box
+            style={{
+              padding: '12px',
+              background: 'var(--gray-a3)',
+              borderRadius: '50%',
+            }}
+          >
+            <UploadIcon style={{ width: '20px', height: '20px', color: 'var(--gray-11)' }} />
+          </Box>
+          
+          <Flex direction="column" align="center" gap="1">
+            <Text size="2" weight="medium" style={{ color: 'var(--gray-12)' }}>
+              {isDragActive ? 'Solte aqui' : 'Escolher arquivo'}
+            </Text>
+            <Text size="1" style={{ color: 'var(--gray-11)' }}>
+              {variant === 'avatar' && 'Imagem do perfil'}
+              {variant === 'banner' && 'Imagem do Banner'}
+              {variant === 'post' && 'Imagens ou vídeos'}
+            </Text>
+          </Flex>
+          
+          {variant !== 'avatar' && (
+            <Text size="1" style={{ color: 'var(--gray-9)' }}>
+              {variant === 'banner' ? 'Até 10MB' : 'Até 5MB'} • JPG, PNG, WEBP
+            </Text>
+          )}
+        </Flex>
+      ) : null}
+      
+      {hasFiles && variant !== 'post' && renderThumb(files[0])}
+    </Box>
+  );
 
   return (
-    <Flex direction="column" gap="4">
-      <Box
-        {...getRootProps()}
-        style={{
-          ...styles.dropzone,
-          border: `2px dashed var(--gray-a7)`,
-          textAlign: 'center',
-          cursor: 'pointer',
-          backgroundColor: isDragActive ? 'var(--gray-a2)' : 'transparent',
-          transition: 'background-color 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          opacity: uploading ? 0.6 : 1,
-          pointerEvents: uploading ? 'none' : 'auto',
-        }}
-      >
-        <input {...getInputProps()} />
-        {files.length === 0 && (
-          <Flex direction="column" align="center" gap="2">
-            <UploadIcon style={styles.icon} />
-            <Text size="2">
-              {isDragActive
-                ? 'Solte o arquivo aqui...'
-                : "Arraste e solte ou clique para selecionar"}
-            </Text>
-            {variant !== 'avatar' && (
-              <Text size="1" color="gray">
-                {variant === 'post' ? 'Imagens e vídeos' : 'Imagem'} 
-                {variant === 'banner' ? ' (até 10MB)' : ' (até 5MB)'}
-              </Text>
-            )}
-          </Flex>
-        )}
-        {files.length > 0 && variant !== 'post' && renderThumb(files[0])}
-      </Box>
+    <Flex direction="column" gap="4" style={styles.container}>
+      {renderDropzone()}
 
-      {files.length > 0 && variant === 'post' && (
-        <Flex wrap="wrap" gap="3" mt="4">
+      {hasFiles && variant === 'post' && (
+        <Flex wrap="wrap" gap="3">
           {files.map(renderThumb)}
         </Flex>
       )}
 
-      {files.length > 0 && !uploading && hasPendingFiles && (
+      {hasFiles && hasPendingFiles && (
         <Button 
           onClick={handleUpload} 
-          color='red'
           disabled={uploading}
+          color='tomato'
+          style={{
+            background: '#dc2626',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+            height: '40px',
+            cursor: uploading ? 'not-allowed' : 'pointer',
+          }}
         >
-          {uploading ? 'Enviando...' : `Upload ${variant === 'post' && files.length > 1 ? `${files.length} files` : 'file'}`}
+          {uploading ? (
+            <Flex align="center" gap="2">
+              <ReloadIcon style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+              Enviando...
+            </Flex>
+          ) : (
+            `Enviar ${files.filter(f => f.status === 'pending').length > 1 ? 'arquivos' : 'arquivo'}`
+          )}
         </Button>
       )}
 
       {hasErrorFiles && (
-        <Text size="2" color="red">
-          Alguns arquivos falharam no upload. Clique em "Tentar novamente" ou remova-os.
-        </Text>
+        <Flex 
+          align="center" 
+          gap="2" 
+          p="3" 
+          style={{
+            background: 'var(--red-a2)',
+            border: '1px solid var(--red-a6)',
+            borderRadius: '8px',
+          }}
+        >
+          <ExclamationTriangleIcon style={{ width: '16px', height: '16px', color: 'var(--red-11)' }} />
+          <Text size="2" style={{ color: 'var(--red-11)' }}>
+            Alguns arquivos falharam. Clique em "Tentar novamente" ou remova-os.
+          </Text>
+        </Flex>
       )}
+      
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </Flex>
   );
 }
