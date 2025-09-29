@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { TextArea, Button, Flex } from '@radix-ui/themes';
-import type { CreateComment, UpdateComment } from '../../types';
 
 interface CommentFormProps {
   onSubmit: (data: { content: string }) => Promise<any>;
