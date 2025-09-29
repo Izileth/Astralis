@@ -14,7 +14,18 @@ class CommentService {
 
   async findByPost(postId: string): Promise<ApiResponse<Comment[]>> {
     const response = await apiClient.get(`/api/comments/post/${postId}`);
-    return response.data;
+
+    // A API retorna um array bruto. Envolvemos ele na estrutura ApiResponse esperada.
+    if (Array.isArray(response.data)) {
+      return { success: true, data: response.data };
+    }
+
+    // Fallback para casos de erro ou formatos inesperados
+    return {
+      success: false,
+      message: 'Formato de resposta inesperado da API de comentários.',
+      data: [],
+    };
   }
 
   async update(id: string, data: UpdateComment): Promise<ApiResponse<Comment>> {

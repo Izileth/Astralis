@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import useAuthStore from './auth'; // Importar o auth store
 import { commentService } from '../services';
 import type { Comment, CreateComment, UpdateComment } from '../types';
 
@@ -34,17 +35,23 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         const newComment = response.data;
         const currentComments = get().comments;
         
-        // Adiciona o novo comentário à lista do post
+        // Adiciona o novo comentário à lista do post (no início)
         set({
           comments: {
             ...currentComments,
             [data.postId]: [
-              ...(currentComments[data.postId] || []),
-              newComment
+              newComment,
+              ...(currentComments[data.postId] || [])
             ]
           },
           loading: false
         });
+
+        // Sincroniza com o authStore
+        const { user, setUser } = useAuthStore.getState();
+        if (user) {
+          setUser({ ...user, comments: [newComment, ...(user.comments || [])] });
+        }
         
         return newComment;
       } else {
@@ -110,6 +117,15 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           comments: updatedCommentsMap,
           loading: false
         });
+
+        // Sincroniza com o authStore
+        const { user, setUser } = useAuthStore.getState();
+        if (user && user.comments) {
+          setUser({ 
+            ...user, 
+            comments: user.comments.map(c => c.id === id ? updatedComment : c) 
+          });
+        }
         
         return updatedComment;
       } else {
@@ -139,6 +155,15 @@ export const useCommentStore = create<CommentState>((set, get) => ({
           },
           loading: false
         });
+
+        // Sincroniza com o authStore
+        const { user, setUser } = useAuthStore.getState();
+        if (user && user.comments) {
+          setUser({ 
+            ...user, 
+            comments: user.comments.filter(c => c.id !== id) 
+          });
+        }
         
         return true;
       } else {

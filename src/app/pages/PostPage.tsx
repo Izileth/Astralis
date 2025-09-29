@@ -13,6 +13,8 @@ export function PostPage() {
   const { slug } = useParams<{ slug: string }>();
   const { post, loading, error } = usePost(slug, true);
 
+  console.log('Post -', post)
+
   if (loading) {
     return <PostPageSkeleton />;
   }
