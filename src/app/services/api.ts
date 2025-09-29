@@ -35,7 +35,7 @@ class ApiClient {
   constructor(config?: ApiClientConfig) {
     // Configurações padrão
     this.config = {
-      baseURL: config?.baseURL ||  'http://localhost:3000' || 'https://astralis-api.onrender.com',
+      baseURL: config?.baseURL || 'https://astralis-api.onrender.com' || 'http://localhost:3000' ,
       timeout: config?.timeout || 30000,
       withCredentials: config?.withCredentials ?? true,
       enableRetry: config?.enableRetry ?? true,
