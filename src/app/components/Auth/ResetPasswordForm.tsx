@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, TextField, Flex, Callout } from '@radix-ui/themes';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Alert, AlertDescription } from '../ui/alert';
 import useAuthStore from '../../store/auth';
 
 export function ResetPasswordForm() {
@@ -39,38 +42,38 @@ export function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="3">
+      <div className="flex flex-col gap-3">
         {error && (
-          <Callout.Root color="red" role="alert">
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
+          <Alert variant="destructive" role="alert">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
-        {message && !error && (
-          <Callout.Root color="green">
-            <Callout.Text>{message}</Callout.Text>
-          </Callout.Root>
+        {message && (
+          <Alert variant={error ? "destructive" : "default"} role="alert">
+            {error ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
         )}
 
-        <TextField.Root
-          size="3"
+        <Input
           type="password"
           placeholder="Nova Senha"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
         />
-        <TextField.Root
-          size="3"
+        <Input
           type="password"
           placeholder="Confirmar Nova Senha"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
-        <Button size="3" type="submit" disabled={isLoading}>
+        <Button variant={"destructive"} type="submit" disabled={isLoading}>
           {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
         </Button>
-      </Flex>
+      </div>
     </form>
   );
 }

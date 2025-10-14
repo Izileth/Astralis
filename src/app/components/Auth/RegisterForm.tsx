@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Flex, Callout } from '@radix-ui/themes';
+import { AlertTriangle } from 'lucide-react';
+
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+
+import { Alert, AlertDescription } from '../ui/alert';
 import useAuthStore from '../../store/auth';
 
 export function RegisterForm() {
@@ -23,40 +28,38 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="3">
+      <div className="flex flex-col gap-3">
         {error && (
-          <Callout.Root color="red" role="alert">
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
+          <Alert variant="destructive" role="alert">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
-        <TextField.Root
-          size="3"
+        <Input
           placeholder="Nome"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
-        <TextField.Root
-          size="3"
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <TextField.Root
-          size="3"
+        <Input
           type="password"
           placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button size="3" color='red' type="submit" disabled={isLoading}>
+        <Button variant={"destructive"} type="submit" disabled={isLoading}>
           {isLoading ? 'Criando conta...' : 'Criar conta'}
         </Button>
-      </Flex>
+      </div>
     </form>
   );
 }

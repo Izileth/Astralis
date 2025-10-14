@@ -1,25 +1,29 @@
-import { Card, Flex, Box, Text, Heading } from '@radix-ui/themes';
 import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { ForgotPasswordForm } from '../components/Auth/ForgotPasswordForm';
 
 export function ForgotPasswordPage() {
   return (
-    <Flex align="center" justify="center" style={{ height: '100vh' }}>
-      <Card style={{ width: 400 }}>
-        <Box p="4">
-          <Heading align="center" mb="6">Esqueceu sua senha?</Heading>
-          <Text as="p" size="2" mb="4" align="center">
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-[400px]">
+        <CardHeader className="text-center">
+          <CardTitle>Esqueceu sua senha?</CardTitle>
+          <CardDescription>
             Digite seu e-mail abaixo e enviaremos um link para redefinir sua senha.
-          </Text>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <ForgotPasswordForm />
-          <Box mt="4" className='text-center'>
-            <Text size="2">
+          <div className="mt-4 text-center">
+            <p className="text-sm">
               Lembrou da senha? {' '}
-              <Link to="/login">Faça login</Link>
-            </Text>
-          </Box>
-        </Box>
+              <Link to="/login" className="underline">
+                Faça login
+              </Link>
+            </p>
+          </div>
+        </CardContent>
       </Card>
-    </Flex>
+    </div>
   );
 }

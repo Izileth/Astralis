@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { Box, Flex, Text, TextField, Button, Separator, ScrollArea } from '@radix-ui/themes';
-import { MagnifyingGlassIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { Search, X } from 'lucide-react';
+
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Separator } from '../ui/separator';
+import { ScrollArea } from '../ui/scroll-area';
 
 // Tipos
 interface Category {
@@ -114,40 +118,29 @@ export function SearchSidebar({
   const hasFilters: boolean = Boolean(searchTerm || selectedCategory || selectedTags.length > 0);
 
   return (
-    <Box className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
-      {/* Header */}
-      <Box className="px-6 py-4 border-b border-gray-200">
-        <Flex align="center" justify="between">
-          <Text size="4" weight="bold" className="font-serif text-red-600 uppercase tracking-wide">
-            Filtros
-          </Text>
+    <div className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold font-serif text-red-600 uppercase tracking-wide">Filtros</h3>
           {hasFilters && (
             <Button
               variant="ghost"
-              size="2"
+              size="icon"
               onClick={handleReset}
               className="text-gray-600 hover:text-red-600 hover:bg-red-50"
             >
-              <Cross2Icon width="16" height="16" />
+              <X className="h-4 w-4" />
             </Button>
           )}
-        </Flex>
-      </Box>
+        </div>
+      </div>
 
       <ScrollArea className="flex-grow">
-        <Box className="p-6">
-          {/* Search Input */}
-          <Box className="mb-6">
-            <Text 
-              as="label" 
-              size="2" 
-              weight="bold" 
-              className="block mb-3 text-gray-500 font-sans uppercase tracking-wider text-xs"
-            >
-              Buscar Notícias
-            </Text>
-            <Flex align="center" pt={'2'} gap="2">
-              <TextField.Root
+        <div className="p-6">
+          <div className="mb-6">
+            <label className="block mb-3 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Buscar Notícias</label>
+            <div className="flex items-center gap-2 pt-2">
+              <Input
                 placeholder="Digite palavras-chave..."
                 value={searchTerm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
@@ -156,123 +149,90 @@ export function SearchSidebar({
               />
               <Button
                 variant="ghost"
+                size="icon"
                 onClick={handleSearch}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
-                <MagnifyingGlassIcon width="16" height="16" />
+                <Search className="h-4 w-4" />
               </Button>
-            </Flex>
-          </Box>
+            </div>
+          </div>
 
-          <Separator size="4" className="my-6" />
+          <Separator className="my-6" />
 
-          {/* Categories */}
-          <Box className="mb-6">
-            <Text 
-              as="label" 
-              size="2" 
-              weight="bold" 
-              className="block mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
-            >
-              Editorias
-            </Text>
-            <div className='flex justify-start gap-1 pt-2 items-center flex-wrap '>
+          <div className="mb-6">
+            <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Editorias</label>
+            <div className='flex flex-col justify-start gap-1 pt-2 items-start'>
               {categories.map((category: Category) => (
                 <Button
                   key={category.id}
-                  color='tomato'
-                  variant="ghost"
+                  variant={selectedCategory === category.name ? "secondary" : "ghost"}
                   onClick={() => handleCategoryChange(category.name)}
-                  className={`
-                    w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium
-                    border-l-4 border-transparent hover:border-l-red-600 hover:bg-red-50
-                    ${selectedCategory === category.name 
-                      ? 'border-l-red-600 bg-red-50 text-red-700' 
-                      : 'text-black hover:text-red-700'
-                    }
-                  `}
+                  className="w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium"
                 >
                   {category.name}
                 </Button>
               ))}
             </div>
-          </Box>
+          </div>
 
-          <Separator size="4" className="my-6" />
+          <Separator className="my-6" />
 
-          {/* Tags */}
-          <Box className="mb-6">
-            <Text 
-              as="label" 
-              size="2" 
-              weight="bold" 
-              className="block mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
-            >
-              Assuntos
-            </Text>
-            <Flex wrap="wrap" pt={'2'} gap="2">
+          <div className="mb-6">
+            <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Assuntos</label>
+            <div className="flex flex-wrap gap-2 pt-2">
               {tags.map((tag: Tag) => (
                 <Button
                   key={tag.id}
-                  size="1"
-                  variant={selectedTags.includes(tag.name) ? "solid" : "outline"}
-                  color={selectedTags.includes(tag.name) ? "red" : "gray"}
+                  size="sm"
+                  variant={selectedTags.includes(tag.name) ? "destructive" : "outline"}
                   onClick={() => handleTagChange(tag.name)}
                   className="font-sans text-xs transition-all duration-200"
                 >
                   #{tag.name}
                 </Button>
               ))}
-            </Flex>
-          </Box>
+            </div>
+          </div>
 
-          {/* Active Filters Summary */}
           {hasFilters && (
             <>
-              <Separator size="4" className="my-6" />
-              <Box className="p-4 bg-gray-50 rounded">
-                <Text 
-                  size="2" 
-                  weight="bold" 
-                  className="block mb-3 text-gray-500 font-sans uppercase tracking-wider text-xs"
-                >
-                  Filtros Ativos
-                </Text>
-                <Flex direction="column" gap="1">
+              <Separator className="my-6" />
+              <div className="p-4 bg-gray-50 rounded">
+                <p className="block mb-3 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Filtros Ativos</p>
+                <div className="flex flex-col gap-1">
                   {searchTerm && (
-                    <Text size="1" className="text-gray-700 font-sans">
-                      Busca: <Text weight="medium">"{searchTerm}"</Text>
-                    </Text>
+                    <p className="text-xs text-gray-700 font-sans">
+                      Busca: <span className="font-medium">"{searchTerm}"</span>
+                    </p>
                   )}
                   {selectedCategory && (
-                    <Text size="1" className="text-gray-700 font-sans">
-                      Editoria: <Text weight="medium">{selectedCategory}</Text>
-                    </Text>
+                    <p className="text-xs text-gray-700 font-sans">
+                      Editoria: <span className="font-medium">{selectedCategory}</span>
+                    </p>
                   )}
                   {selectedTags.length > 0 && (
-                    <Text size="1" className="text-gray-700 font-sans">
-                      Assuntos: <Text weight="medium">{selectedTags.join(', ')}</Text>
-                    </Text>
+                    <p className="text-xs text-gray-700 font-sans">
+                      Assuntos: <span className="font-medium">{selectedTags.join(', ')}</span>
+                    </p>
                   )}
-                </Flex>
-              </Box>
+                </div>
+              </div>
             </>
           )}
-        </Box>
+        </div>
       </ScrollArea>
 
-      {/* Footer */}
-      <Box className="p-6 border-t border-gray-200">
+      <div className="p-6 border-t border-gray-200">
         <Button
           variant="outline"
-          color="red"
           onClick={handleReset}
           disabled={!hasFilters}
           className="w-full font-sans font-medium transition-all duration-200"
         >
           Limpar Todos os Filtros
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

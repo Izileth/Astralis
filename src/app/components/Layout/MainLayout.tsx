@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Box, Flex} from '@radix-ui/themes';
 import { SearchSidebar } from './SearchSidebar';
 import { Header } from './Header';
 
@@ -12,39 +11,28 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [isDesktopSearchSidebarOpen, setIsDesktopSearchSidebarOpen] = useState(false);
 
   return (
-    <Flex direction="column" style={{ minHeight: "100vh" }}>
+    <div className="flex flex-col min-h-screen">
       <Header 
         onSearchIconClick={() => setIsMobileSearchSidebarOpen(!isMobileSearchSidebarOpen)}
         onDesktopSearchIconClick={() => setIsDesktopSearchSidebarOpen(!isDesktopSearchSidebarOpen)}
       />
-      <Flex flexGrow="1">
-        <Box flexGrow="1">
+      <div className="flex flex-grow">
+        <div className="flex-grow">
           {children}
-        </Box>
+        </div>
         {/* Desktop Sidebar */}
         {isDesktopSearchSidebarOpen && (
-          <Box display={{ initial: 'none', md: 'block' }} width="320px">
+          <div className="hidden md:block w-80">
             <SearchSidebar />
-          </Box>
+          </div>
         )}
         {/* Mobile Sidebar (Drawer) */}
         {isMobileSearchSidebarOpen && (
-          <Box 
-            display={{ initial: 'block', md: 'none' }} 
-            style={{ 
-              position: 'fixed', 
-              top: 0, 
-              right: 0, 
-              bottom: 0, 
-              width: '100%', 
-              backgroundColor: 'white', 
-              zIndex: 101 
-            }}
-          >
+          <div className="block md:hidden fixed top-0 right-0 bottom-0 w-full bg-white z-50">
             <SearchSidebar />
-          </Box>
+          </div>
         )}
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }

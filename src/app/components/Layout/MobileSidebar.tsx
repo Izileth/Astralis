@@ -1,7 +1,11 @@
-import { Flex, IconButton, Text, Box, Separator } from '@radix-ui/themes';
 import { useNavigate } from 'react-router-dom';
+import { X, Home, User, LogOut, LogIn, Plus } from 'lucide-react';
+
+import { Button } from '../ui/button';
+import { Separator } from '../ui/separator';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '../ui/sheet';
+
 import useAuthStore from '../../store/auth';
-import { Cross1Icon, HomeIcon, PersonIcon, ExitIcon, EnterIcon, PlusIcon } from '@radix-ui/react-icons';
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -53,97 +57,75 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     navigate(path);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 bg-white">
-      {/* Header */}
-      <Box className="flex items-center justify-between p-6 border-b border-gray-200">
-        <Text size="5" weight="bold" className="font-serif text-red-600 uppercase tracking-wide">
-          Menu
-        </Text>
-        <IconButton 
-          variant="ghost" 
-          size="3"
-          onClick={onClose}
-          className="text-gray-600 hover:text-red-600 hover:bg-red-50"
-        >
-          <Cross1Icon />
-        </IconButton>
-      </Box>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="left" className="p-0">
+        <SheetHeader className="flex flex-row items-center justify-between p-6 border-b border-gray-200">
+          <SheetTitle className="font-serif text-red-600 uppercase tracking-wide">Menu</SheetTitle>
+          <SheetClose asChild>
+            <Button variant="ghost" size="icon">
+              <X className="h-5 w-5 text-gray-600" />
+            </Button>
+          </SheetClose>
+        </SheetHeader>
 
-      {/* Navigation Content */}
-      <Box className="flex-1 py-8">
-        {/* Main Navigation */}
-        <Box className="mb-8">
-          <Text 
-            size="2" 
-            weight="bold" 
-            className="px-6 mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
-          >
-            Navegação
-          </Text>
-          
-          <Flex direction="column">
-            <NavLink 
-              onClick={() => handleNavigation('/')}
-              icon={<HomeIcon />}
-            >
-              Início
-            </NavLink>
-          </Flex>
-        </Box>
+        <div className="flex-1 py-8">
+          <div className="mb-8">
+            <p className="px-6 mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs font-bold">Navegação</p>
+            <div className="flex flex-col">
+              <NavLink 
+                onClick={() => handleNavigation('/')}
+                icon={<Home className="h-5 w-5" />}
+              >
+                Início
+              </NavLink>
+            </div>
+          </div>
 
-        <Separator size="4" className="mx-6 my-6" />
+          <Separator className="mx-6 my-6" />
 
-        {/* User Section */}
-        <Box>
-          <Text 
-            size="2" 
-            weight="bold" 
-            className="px-6 mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs"
-          >
-            {isAuthenticated ? 'Conta' : 'Acesso'}
-          </Text>
-          
-          <Flex direction="column">
-            {isAuthenticated ? (
-              <>
-                <NavLink 
-                  onClick={() => handleNavigation('/profile')}
-                  icon={<PersonIcon />}
-                >
-                  Meu Perfil
-                </NavLink>
-                <NavLink 
-                  onClick={handleLogout}
-                  icon={<ExitIcon />}
-                  variant="danger"
-                >
-                  Sair
-                </NavLink>
-              </>
-            ) : (
-              <>
-                <NavLink 
-                  onClick={() => handleNavigation('/login')}
-                  icon={<EnterIcon />}
-                  variant="primary"
-                >
-                  Entrar
-                </NavLink>
-                <NavLink 
-                  onClick={() => handleNavigation('/register')}
-                  icon={<PlusIcon />}
-                >
-                  Criar Conta
-                </NavLink>
-              </>
-            )}
-          </Flex>
-        </Box>
-      </Box>
-
-    </div>
+          <div>
+            <p className="px-6 mb-4 text-gray-500 font-sans uppercase tracking-wider text-xs font-bold">
+              {isAuthenticated ? 'Conta' : 'Acesso'}
+            </p>
+            <div className="flex flex-col">
+              {isAuthenticated ? (
+                <>
+                  <NavLink 
+                    onClick={() => handleNavigation('/profile')}
+                    icon={<User className="h-5 w-5" />}
+                  >
+                    Meu Perfil
+                  </NavLink>
+                  <NavLink 
+                    onClick={handleLogout}
+                    icon={<LogOut className="h-5 w-5" />}
+                    variant="danger"
+                  >
+                    Sair
+                  </NavLink>
+                </>
+              ) : (
+                <>
+                  <NavLink 
+                    onClick={() => handleNavigation('/login')}
+                    icon={<LogIn className="h-5 w-5" />}
+                    variant="primary"
+                  >
+                    Entrar
+                  </NavLink>
+                  <NavLink 
+                    onClick={() => handleNavigation('/register')}
+                    icon={<Plus className="h-5 w-5" />}
+                  >
+                    Criar Conta
+                  </NavLink>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

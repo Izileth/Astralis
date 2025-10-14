@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, TextField, Flex, Text, Callout } from '@radix-ui/themes';
+import { AlertTriangle } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Alert, AlertDescription } from '../ui/alert';
 import useAuthStore from '../../store/auth';
 
 export function LoginForm() {
@@ -22,40 +25,39 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="3">
+      <div className="flex flex-col gap-3">
         {error && (
-          <Callout.Root color="red" role="alert">
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
+          <Alert variant="destructive" role="alert">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
-        <TextField.Root
-          size="3"
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <TextField.Root
-          size="3"
+        <Input
           type="password"
           placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Flex justify="end">
+        <div className="flex justify-end">
           <Link to="/forgot-password">
-            <Text size="2" color="gray">
+            <p className="text-sm text-gray-500">
               Esqueceu sua senha?
-            </Text>
+            </p>
           </Link>
-        </Flex>
-        <Button size="3" type="submit" color="red" disabled={isLoading}>
+        </div>
+        <Button type="submit" variant="destructive" disabled={isLoading}>
           {isLoading ? 'Entrando...' : 'Entrar'}
         </Button>
-      </Flex>
+      </div>
     </form>
   );
 }

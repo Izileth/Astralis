@@ -1,15 +1,17 @@
-import { Card, Flex, Box, Heading } from '@radix-ui/themes';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { ResetPasswordForm } from '../components/Auth/ResetPasswordForm';
 
 export function ResetPasswordPage() {
   return (
-    <Flex align="center" justify="center" style={{ height: '100vh' }}>
-      <Card style={{ width: 400 }}>
-        <Box p="4">
-          <Heading align="center" mb="6">Redefinir Senha</Heading>
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-[400px]">
+        <CardHeader>
+          <CardTitle className="text-center">Redefinir Senha</CardTitle>
+        </CardHeader>
+        <CardContent>
           <ResetPasswordForm />
-        </Box>
+        </CardContent>
       </Card>
-    </Flex>
+    </div>
   );
 }

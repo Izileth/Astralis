@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Button, TextField, Flex, Callout } from '@radix-ui/themes';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Alert, AlertDescription } from '../ui/alert';
 import useAuthStore from '../../store/auth';
 
 export function ForgotPasswordForm() {
@@ -21,30 +25,31 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="3">
+      <div className="flex flex-col gap-3">
         {error && (
-          <Callout.Root color="red" role="alert">
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
+          <Alert variant="destructive" role="alert">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
         {message && !error && (
-          <Callout.Root color="green">
-            <Callout.Text>{message}</Callout.Text>
-          </Callout.Root>
+          <Alert variant="default">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
         )}
 
-        <TextField.Root
-          size="3"
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <Button size="3" type="submit" disabled={isLoading}>
+        <Button variant={"destructive"} type="submit" disabled={isLoading}>
           {isLoading ? 'Enviando...' : 'Redefinir Senha'}
         </Button>
-      </Flex>
+      </div>
     </form>
   );
 }

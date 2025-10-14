@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { usePosts, usePagination } from '../../hooks/usePost';
 import { PostCard } from './PostCard';
-import { Grid, Flex, Button, Text, Box, Heading, Card } from '@radix-ui/themes';
 import { PostListSkeleton } from '../Common/Skeleton';
-import { RefreshCcw, AlertCircle,  WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCcw, AlertCircle, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Card, CardContent } from '../ui/card';
 
 interface PostListProps {
   isOwner?: boolean;
 }
 
-// Tipos de erro para melhor categorização
 const ErrorType = {
   NETWORK: 'network',
   SERVER: 'server', 
@@ -24,7 +24,7 @@ interface ErrorInfo {
   title: string;
   description: string;
   canRetry: boolean;
-  icon: React.ComponentType;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const getErrorInfo = (error: string): ErrorInfo => {
@@ -77,7 +77,6 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Monitor status da conexão
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -91,12 +90,11 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
     };
   }, []);
 
-  // Auto-retry quando voltar online
   useEffect(() => {
     if (isOnline && error && retryAttempts < 3) {
       handleRetry();
     }
-  }, [isOnline]);
+  }, [isOnline, error, retryAttempts]);
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -112,219 +110,147 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
     }
   };
 
-  // Loading inicial
   if (loading && posts.length === 0) {
     return <PostListSkeleton />;
   }
 
-  // Estado de erro aprimorado
   if (error) {
     const errorInfo = getErrorInfo(error);
     const ErrorIcon = errorInfo.icon;
 
     return (
-      <Box py="8" aria-brailleroledescription='none'>
-        <Card size="3" style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <Flex direction="column" align="center" gap="4" p="6">
-            <Box
-              style={{
-                padding: '16px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--red-3)',
-                color: 'var(--red-11)'
-              }}
-            >
-              <ErrorIcon  />
-            </Box>
+      <div className="py-8">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="flex flex-col items-center gap-4 p-6">
+            <div className="p-4 rounded-full bg-red-100 text-red-700">
+              <ErrorIcon className="h-8 w-8" />
+            </div>
             
-            <Flex direction="column" align="center" gap="2">
-              <Heading size="5" color="red">
-                {errorInfo.title}
-              </Heading>
-              <Text align="center" color="gray" size="3">
-                {errorInfo.description}
-              </Text>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h3 className="text-xl font-semibold text-red-700">{errorInfo.title}</h3>
+              <p className="text-gray-600">{errorInfo.description}</p>
               
               {!isOnline && (
-                <Flex align="center" gap="2" mt="2">
-                  <WifiOff size={16} color="var(--orange-11)" />
-                  <Text size="2" color="orange">
-                    Você está offline
-                  </Text>
-                </Flex>
+                <div className="flex items-center gap-2 mt-2">
+                  <WifiOff className="h-4 w-4 text-orange-600" />
+                  <p className="text-sm text-orange-600">Você está offline</p>
+                </div>
               )}
-            </Flex>
+            </div>
 
-            <Flex direction="column" gap="3" width="100%">
+            <div className="flex flex-col gap-3 w-full">
               {errorInfo.canRetry && (
                 <Button
                   onClick={handleRetry}
                   disabled={isRetrying || (!isOnline && errorInfo.type === ErrorType.NETWORK)}
-                  size="3"
-                  style={{ width: '100%', color:'white',    background: '#dc2626', }}
+                  className="w-full"
+                  variant="destructive"
                 >
-                  <RefreshCcw size={16} />
+                  <RefreshCcw className="h-4 w-4 mr-2" />
                   {isRetrying ? 'Tentando...' : 'Tentar Novamente'}
                 </Button>
               )}
               
               {retryAttempts > 0 && (
-                <Text size="2" color="gray" align="center">
-                  Tentativa {retryAttempts} de 3
-                </Text>
+                <p className="text-sm text-gray-500 text-center">Tentativa {retryAttempts} de 3</p>
               )}
 
-              <Text size="2" color="gray" align="center">
-                Se o problema persistir, entre em contato conosco
-              </Text>
-            </Flex>
-          </Flex>
+              <p className="text-sm text-gray-500 text-center">Se o problema persistir, entre em contato conosco</p>
+            </div>
+          </CardContent>
         </Card>
-      </Box>
+      </div>
     );
   }
 
-  // Empty state melhorado
   if (posts.length === 0) {
     return (
-      <Box py="8">
-        <Card size="3" style={{ maxWidth: '400px', margin: '0 auto' }}>
-          <Flex direction="column" align="center" gap="4" p="6">
-            <Box
-              style={{
-                padding: '20px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--gray-3)',
-                color: 'var(--gray-11)'
-              }}
-            >
+      <div className="py-8">
+        <Card className="max-w-sm mx-auto">
+          <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
+            <div className="p-5 rounded-full bg-gray-100 text-gray-600">
               📝
-            </Box>
+            </div>
             
-            <Flex direction="column" align="center" gap="2">
-              <Heading size="5">
+            <div>
+              <h3 className="text-xl font-semibold">
                 {isOwner ? 'Você ainda não publicou nada' : 'Nenhum post encontrado'}
-              </Heading>
-              <Text align="center" color="gray" size="3">
+              </h3>
+              <p className="text-gray-600 mt-2">
                 {isOwner 
                   ? 'Que tal criar seu primeiro post? Compartilhe suas ideias com o mundo!'
                   : 'Ainda não há nada para ver aqui. Volte mais tarde ou explore outras seções!'
                 }
-              </Text>
-            </Flex>
+              </p>
+            </div>
 
             {isOwner && (
-              <Button size="3" style={{ marginTop: '8px' }}>
-                Criar Primeiro Post
-              </Button>
+              <Button className="mt-2">Criar Primeiro Post</Button>
             )}
-          </Flex>
+          </CardContent>
         </Card>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Flex direction="column" gap="6">
-      {/* Indicador de loading durante paginação */}
+    <div className="flex flex-col gap-6">
       {loading && posts.length > 0 && (
-        <Box 
-          style={{
-            position: 'fixed',
-            top: '80px',
-            right: '20px',
-            zIndex: 1000,
-            backgroundColor: 'var(--gray-1)',
-            border: '1px solid var(--gray-6)',
-            borderRadius: '8px',
-            padding: '8px 12px'
-          }}
-        >
-          <Flex align="center" gap="2">
-            <RefreshCcw size={16} className="animate-spin" />
-            <Text size="2">Sicronizando...</Text>
-          </Flex>
-        </Box>
+        <div className="fixed top-20 right-5 z-50 bg-background border rounded-lg py-2 px-3">
+          <div className="flex items-center gap-2">
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            <p className="text-sm">Sincronizando...</p>
+          </div>
+        </div>
       )}
 
-      {/* Grid de posts */}
-      <Grid 
-        columns={{ initial: '1', sm: '2', md: '3' }} 
-        gap="5"
-        style={{
-          opacity: loading ? 0.7 : 1,
-          transition: 'opacity 0.2s ease'
-        }}
-      >
+      <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 transition-opacity duration-200 ${loading ? 'opacity-70' : 'opacity-100'}`}>
         {posts.map(post => (
           <PostCard 
             key={post.id} 
             post={post} 
             isOwner={isOwner}
-
           />
         ))}
-      </Grid>
+      </div>
 
-      {/* Paginação melhorada */}
       {pagination.totalPages > 1 && (
         <Card>
-          <Flex align="center" justify="between" p="4">
+          <CardContent className="flex items-center justify-between p-4">
             <Button
               onClick={goToPrev}
               disabled={!hasPrev || loading}
-              variant="soft"
-              size="3"
+              variant="outline"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft className="h-4 w-4 mr-2" />
               Anterior
             </Button>
 
-            <Flex direction="column" align="center" gap="1">
-              <Text size="3" weight="medium">
-                Página {pagination.page} de {pagination.totalPages}
-              </Text>
-              <Text size="2" color="gray">
-                {posts.length} posts exibidos
-              </Text>
-            </Flex>
+            <div className="text-center">
+              <p className="text-sm font-medium">Página {pagination.page} de {pagination.totalPages}</p>
+              <p className="text-sm text-gray-500">{posts.length} posts exibidos</p>
+            </div>
 
             <Button
               onClick={goToNext}
               disabled={!hasNext || loading}
-              variant="soft"
-              size="3"
+              variant="outline"
             >
               Próxima
-              <ChevronRight size={16} />
+              <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
-          </Flex>
+          </CardContent>
         </Card>
       )}
 
-      {/* Indicador de status da conexão */}
       {!isOnline && (
-        <Box
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--orange-9)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            zIndex: 1000
-          }}
-        >
-          <Flex align="center" gap="2">
-            <WifiOff size={16} />
-            <Text size="2" weight="medium">
-              Você está offline
-            </Text>
-          </Flex>
-        </Box>
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-orange-600 text-white py-2 px-4 rounded-full z-50">
+          <div className="flex items-center gap-2">
+            <WifiOff className="h-4 w-4" />
+            <p className="text-sm font-medium">Você está offline</p>
+          </div>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 };
