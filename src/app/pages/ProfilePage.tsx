@@ -158,9 +158,9 @@ function EditProfileDialog({
                   <SelectValue placeholder="Selecione um status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">✅ Ativo</SelectItem>
-                  <SelectItem value="busy">⏰ Ocupado</SelectItem>
-                  <SelectItem value="inactive">⭕ Inativo</SelectItem>
+                  <SelectItem value="active"> Ativo</SelectItem>
+                  <SelectItem value="busy"> Ocupado</SelectItem>
+                  <SelectItem value="inactive"> Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -233,14 +233,14 @@ function AddSocialLinkDialog({
                 <SelectValue placeholder="Selecione uma plataforma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="instagram">📷 Instagram</SelectItem>
-                <SelectItem value="twitter">🐦 Twitter/X</SelectItem>
-                <SelectItem value="linkedin">💼 LinkedIn</SelectItem>
-                <SelectItem value="github">🐙 GitHub</SelectItem>
-                <SelectItem value="youtube">📺 YouTube</SelectItem>
-                <SelectItem value="tiktok">🎵 TikTok</SelectItem>
-                <SelectItem value="facebook">👥 Facebook</SelectItem>
-                <SelectItem value="website">🌐 Website</SelectItem>
+                <SelectItem value="instagram"> Instagram</SelectItem>
+                <SelectItem value="twitter">Twitter/X</SelectItem>
+                <SelectItem value="linkedin"> LinkedIn</SelectItem>
+                <SelectItem value="github"> GitHub</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="tiktok"> TikTok</SelectItem>
+                <SelectItem value="facebook"> Facebook</SelectItem>
+                <SelectItem value="website"> Website</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -441,7 +441,7 @@ export function ProfilePage() {
                         : "bg-red-50 text-red-700 border-red-300"
                   }`}
                 >
-                  {user.status === "active" ? "✅ Ativo" : user.status === "busy" ? "⏰ Ocupado" : "⭕ Inativo"}
+                  {user.status === "active" ? " Ativo" : user.status === "busy" ? " Ocupado" : " Inativo"}
                 </Badge>
                 <Badge
                   variant="outline"

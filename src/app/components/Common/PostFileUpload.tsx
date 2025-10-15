@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Text, Flex, IconButton, Progress, Button } from '@radix-ui/themes';
-import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon, VideoIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { X, Upload, Image, Video, AlertCircle } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
 import { usePostMediaUpload, useMediaValidation } from '../../hooks/usePost';
 
 export interface FileWithPreview extends File {
@@ -23,6 +23,7 @@ interface PostFileUploadProps {
   multiple?: boolean;
   acceptVideo?: boolean;
   maxFileSize?: number;
+  className?: string;
 }
 
 export function PostFileUpload({ 
@@ -32,15 +33,15 @@ export function PostFileUpload({
   multiple = true,
   acceptVideo = true,
   maxFileSize = 10,
+  className
 }: PostFileUploadProps) {
   const [files, setFiles] = useState<UploadableFile[]>([]);
+  const [isHovered, setIsHovered] = useState(false);
   
   const { uploadPostMedia, uploadStandaloneImage, isUploading } = usePostMediaUpload();
   const { validateMediaFile } = useMediaValidation();
-  
-  const [localUploading, setLocalUploading] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const validatedFiles: UploadableFile[] = [];
 
     acceptedFiles.forEach(file => {
@@ -66,13 +67,68 @@ export function PostFileUpload({
         file: Object.assign(file, {
           preview: URL.createObjectURL(file),
         }) as FileWithPreview,
-        status: 'pending',
+        status: 'uploading',
         progress: 0,
       });
     });
 
     setFiles(prevFiles => multiple ? [...prevFiles, ...validatedFiles] : validatedFiles);
-  }, [multiple, validateMediaFile, maxFileSize, acceptVideo]);
+
+    // Upload automático e silencioso
+    for (const uploadableFile of validatedFiles) {
+      if (uploadableFile.status === 'error') continue;
+      
+      try {
+        // Simula progresso suave
+        const progressInterval = setInterval(() => {
+          setFiles(prev => prev.map(f => 
+            f.file === uploadableFile.file && f.progress < 85
+              ? { ...f, progress: f.progress + 15 }
+              : f
+          ));
+        }, 300);
+
+        let result;
+        const isVideo = uploadableFile.file.type.startsWith('video/');
+
+        if (postId) {
+          result = await uploadPostMedia(postId, uploadableFile.file);
+          
+          if (result) {
+            const mediaUrl = isVideo ? result.videoUrl : result.imageUrl;
+            if (mediaUrl) {
+              onUploadComplete(mediaUrl, isVideo);
+            }
+          }
+        } else if (onStandaloneUpload && !isVideo) {
+          const url = await uploadStandaloneImage(uploadableFile.file);
+          
+          if (url) {
+            onStandaloneUpload(url);
+            onUploadComplete(url, false);
+          }
+        } else {
+          throw new Error('Configuração de upload inválida');
+        }
+
+        clearInterval(progressInterval);
+        
+        setFiles(prev => prev.map(f => 
+          f.file === uploadableFile.file 
+            ? { ...f, status: 'success', progress: 100 }
+            : f
+        ));
+
+      } catch (error: any) {
+        console.error(`Erro no upload de ${uploadableFile.file.name}:`, error);
+        setFiles(prev => prev.map(f => 
+          f.file === uploadableFile.file 
+            ? { ...f, status: 'error', error: error.message || 'Erro no upload' }
+            : f
+        ));
+      }
+    }
+  }, [multiple, validateMediaFile, maxFileSize, acceptVideo, postId, uploadPostMedia, uploadStandaloneImage, onUploadComplete, onStandaloneUpload]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -83,94 +139,67 @@ export function PostFileUpload({
     multiple,
   });
 
-  const handleUpload = async () => {
-    const pendingFiles = files.filter(f => f.status === 'pending');
-    if (pendingFiles.length === 0) return;
-
-    setLocalUploading(true);
-    
-    setFiles(prev => prev.map(f => 
-      f.status === 'pending' ? { ...f, status: 'uploading' as const } : f
-    ));
-
-    try {
-      const uploadPromises = pendingFiles.map(async (uploadableFile) => {
-        try {
-          setFiles(prev => prev.map(f => 
-            f.file === uploadableFile.file ? { ...f, progress: 20 } : f
-          ));
-
-          let result;
-          const isVideo = uploadableFile.file.type.startsWith('video/');
-
-          if (postId) {
-            result = await uploadPostMedia(postId, uploadableFile.file);
-            
-            setFiles(prev => prev.map(f => 
-              f.file === uploadableFile.file ? { ...f, progress: 80 } : f
-            ));
-
-            if (result) {
-              const mediaUrl = isVideo ? result.videoUrl : result.imageUrl;
-              if (mediaUrl) {
-                onUploadComplete(mediaUrl, isVideo);
-              }
-            }
-          } else if (onStandaloneUpload && !isVideo) {
-            const url = await uploadStandaloneImage(uploadableFile.file);
-            
-            setFiles(prev => prev.map(f => 
-              f.file === uploadableFile.file ? { ...f, progress: 80 } : f
-            ));
-
-            if (url) {
-              onStandaloneUpload(url);
-              onUploadComplete(url, false);
-            }
-          } else {
-            throw new Error('Configuração de upload inválida');
-          }
-
-          setFiles(prev => prev.map(f => 
-            f.file === uploadableFile.file ? { ...f, progress: 100 } : f
-          ));
-
-          return { ...uploadableFile, status: 'success' as const };
-        } catch (error: any) {
-          console.error(`Erro no upload de ${uploadableFile.file.name}:`, error);
-          return { 
-            ...uploadableFile, 
-            status: 'error' as const, 
-            error: error.message || 'Erro no upload'
-          };
-        }
-      });
-
-      const results = await Promise.all(uploadPromises);
-      
-      setFiles(prev => prev.map(f => {
-        const result = results.find(r => r.file === f.file);
-        return result || f;
-      }));
-
-    } catch (error) {
-      console.error('Erro geral no upload:', error);
-    } finally {
-      setLocalUploading(false);
-    }
-  };
-
-  const removeFile = (fileToRemove: FileWithPreview) => {
+  const removeFile = (fileToRemove: FileWithPreview, e: React.MouseEvent) => {
+    e.stopPropagation();
     setFiles(prevFiles => prevFiles.filter(f => f.file !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
   };
 
-  const retryUpload = (uploadableFile: UploadableFile) => {
+  const retryUpload = async (uploadableFile: UploadableFile, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     setFiles(prev => prev.map(f => 
       f.file === uploadableFile.file 
-        ? { ...f, status: 'pending', progress: 0, error: undefined }
+        ? { ...f, status: 'uploading', progress: 0, error: undefined }
         : f
     ));
+
+    try {
+      const progressInterval = setInterval(() => {
+        setFiles(prev => prev.map(f => 
+          f.file === uploadableFile.file && f.progress < 85
+            ? { ...f, progress: f.progress + 15 }
+            : f
+        ));
+      }, 300);
+
+      const isVideo = uploadableFile.file.type.startsWith('video/');
+      let result;
+
+      if (postId) {
+        result = await uploadPostMedia(postId, uploadableFile.file);
+        
+        if (result) {
+          const mediaUrl = isVideo ? result.videoUrl : result.imageUrl;
+          if (mediaUrl) {
+            onUploadComplete(mediaUrl, isVideo);
+          }
+        }
+      } else if (onStandaloneUpload && !isVideo) {
+        const url = await uploadStandaloneImage(uploadableFile.file);
+        
+        if (url) {
+          onStandaloneUpload(url);
+          onUploadComplete(url, false);
+        }
+      }
+
+      clearInterval(progressInterval);
+      
+      setFiles(prev => prev.map(f => 
+        f.file === uploadableFile.file 
+          ? { ...f, status: 'success', progress: 100 }
+          : f
+      ));
+
+    } catch (error: any) {
+      console.error(`Erro no retry:`, error);
+      setFiles(prev => prev.map(f => 
+        f.file === uploadableFile.file 
+          ? { ...f, status: 'error', error: error.message || 'Erro no upload' }
+          : f
+      ));
+    }
   };
 
   useEffect(() => {
@@ -185,346 +214,162 @@ export function PostFileUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const renderStatusOverlay = (uploadableFile: UploadableFile) => {
-    const { status, progress, error } = uploadableFile;
-    
-    if (status === 'uploading') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: '8px',
-          }}
-        >
-          <Box style={{ width: '70%', textAlign: 'center' }}>
-            <Progress 
-              value={progress} 
-              style={{ 
-                width: '100%',
-                height: '4px',
-                marginBottom: '8px'
-              }} 
-            />
-            <Text size="1" style={{ color: 'white', fontWeight: '500' }}>
-              {progress}%
-            </Text>
-          </Box>
-        </Flex>
-      );
-    }
-    
-    if (status === 'success') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '24px',
-            height: '24px',
-            background: 'var(--green-9)',
-            borderRadius: '50%',
-          }}
-        >
-          <CheckCircledIcon style={{ width: '14px', height: '14px', color: 'white' }} />
-        </Flex>
-      );
-    }
-    
-    if (status === 'error') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(239, 68, 68, 0.9)',
-            borderRadius: '8px',
-            flexDirection: 'column',
-            gap: '8px',
-            padding: '12px'
-          }}
-        >
-          <ExclamationTriangleIcon style={{ width: '20px', height: '20px', color: 'white' }} />
-          {error && (
-            <Text size="1" style={{ color: 'white', textAlign: 'center', lineHeight: '1.3' }}>
-              {error.length > 40 ? error.substring(0, 40) + '...' : error}
-            </Text>
-          )}
-          <Button 
-            size="1" 
-            variant="solid"
-            style={{
-              background: 'white',
-              color: 'var(--red-9)',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '11px'
-            }}
-            onClick={() => retryUpload(uploadableFile)}
-          >
-            <ReloadIcon style={{ width: '12px', height: '12px' }} />
-            Tentar novamente
-          </Button>
-        </Flex>
-      );
-    }
-    
-    return null;
-  };
-
-  const renderThumb = (uploadableFile: UploadableFile) => {
-    const { file } = uploadableFile;
+  const renderMediaItem = (uploadableFile: UploadableFile) => {
+    const { file, status, progress, error } = uploadableFile;
     const isVideo = file.type.startsWith('video/');
     
     return (
-      <Box 
-        key={file.name} 
-        style={{ 
-          position: 'relative',
-          width: '120px',
-          height: '120px',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          border: '1px solid var(--gray-a6)',
-        }}
+      <div 
+        key={file.name}
+        className="relative group w-32 h-32 rounded-lg overflow-hidden bg-muted"
       >
+        {/* Preview */}
         {file.type.startsWith('image/') ? (
           <img 
             src={file.preview} 
             alt="Preview"
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover',
-            }} 
+            className={cn(
+              "w-full h-full object-cover transition-all duration-300",
+              status === 'uploading' && "blur-[2px] scale-105"
+            )}
           />
         ) : isVideo ? (
-          <Flex 
-            align="center" 
-            justify="center" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              background: 'var(--gray-a3)' 
-            }}
-          >
-            <VideoIcon style={{ width: '32px', height: '32px', color: 'var(--gray-11)' }} />
-          </Flex>
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <Video className="w-8 h-8 text-muted-foreground" />
+          </div>
         ) : (
-          <Flex 
-            align="center" 
-            justify="center" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              background: 'var(--gray-a3)' 
-            }}
-          >
-            <ImageIcon style={{ width: '32px', height: '32px', color: 'var(--gray-11)' }} />
-          </Flex>
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <Image className="w-8 h-8 text-muted-foreground" />
+          </div>
         )}
         
-        {renderStatusOverlay(uploadableFile)}
-        
+        {/* Loading overlay sutil */}
+        {status === 'uploading' && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]">
+            <div 
+              className="absolute bottom-0 left-0 h-1 bg-white/80 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+
+        {/* Erro discreto */}
+        {status === 'error' && (
+          <div className="absolute inset-0 bg-red-500/90 backdrop-blur-sm flex flex-col items-center justify-center p-3 gap-2">
+            <AlertCircle className="w-5 h-5 text-white" />
+            <button
+              onClick={(e) => retryUpload(uploadableFile, e)}
+              className="text-[10px] font-medium text-white bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
         {/* Botão de remover */}
-        <IconButton 
-          size="1" 
-          variant="solid" 
-          color="gray"
-          highContrast
-          onClick={() => removeFile(file)} 
-          style={{ 
-            position: 'absolute', 
-            top: '6px', 
-            right: '6px',
-            width: '24px',
-            height: '24px',
-            background: 'rgba(0, 0, 0, 0.6)',
-            border: 'none',
-            cursor: 'pointer',
-            opacity: uploadableFile.status === 'uploading' ? 0.5 : 1,
-            pointerEvents: uploadableFile.status === 'uploading' ? 'none' : 'auto'
-          }} 
-        >
-          <Cross2Icon style={{ width: '12px', height: '12px' }} />
-        </IconButton>
+        {status !== 'uploading' && (
+          <button
+            onClick={(e) => removeFile(file, e)}
+            className={cn(
+              "absolute top-2 right-2 w-6 h-6 rounded-full",
+              "bg-black/60 hover:bg-black/80",
+              "flex items-center justify-center",
+              "opacity-0 group-hover:opacity-100",
+              "transition-all duration-200",
+              "backdrop-blur-sm"
+            )}
+          >
+            <X className="w-3.5 h-3.5 text-white" />
+          </button>
+        )}
 
         {/* Info do arquivo */}
-        <Box
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-            padding: '8px 6px 6px',
-          }}
-        >
-          <Text 
-            size="1" 
-            style={{ 
-              color: 'white', 
-              fontWeight: '500',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-              display: 'block',
-              lineHeight: '1.2'
-            }}
-          >
-            {file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
-          </Text>
-          <Text 
-            size="1" 
-            style={{ 
-              color: 'rgba(255,255,255,0.8)', 
-              fontSize: '10px'
-            }}
-          >
-            {formatFileSize(file.size)} {isVideo && '• Video'}
-          </Text>
-        </Box>
-      </Box>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
+          <p className="text-[10px] text-white font-medium truncate leading-tight">
+            {file.name.length > 18 ? file.name.substring(0, 18) + '...' : file.name}
+          </p>
+          <p className="text-[9px] text-white/70">
+            {formatFileSize(file.size)} {isVideo && '• Vídeo'}
+          </p>
+        </div>
+      </div>
     );
   };
 
-  const uploading = localUploading || isUploading;
-  const hasPendingFiles = files.some(f => f.status === 'pending');
+  const hasFiles = files.length > 0;
+  const hasUploadingFiles = files.some(f => f.status === 'uploading');
   const hasErrorFiles = files.some(f => f.status === 'error');
-  const pendingCount = files.filter(f => f.status === 'pending').length;
 
   return (
-    <Flex direction="column" gap="4" style={{ width: '100%' }}>
-      <Box
+    <div className={cn("space-y-4", className)}>
+      {/* Dropzone */}
+      <div
         {...getRootProps()}
-        style={{
-          padding: '40px 24px',
-          border: isDragActive 
-            ? '2px solid var(--blue-8)' 
-            : '2px dashed var(--gray-a7)',
-          background: isDragActive 
-            ? 'var(--blue-a2)' 
-            : 'var(--gray-a1)',
-          borderRadius: '12px',
-          cursor: uploading ? 'not-allowed' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          opacity: uploading ? 0.6 : 1,
-          pointerEvents: uploading ? 'none' : 'auto',
-          transition: 'all 0.2s ease',
-        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "border-2 border-dashed rounded-lg p-8",
+          "flex flex-col items-center justify-center",
+          "transition-all duration-200 cursor-pointer",
+          isDragActive 
+            ? "border-primary bg-primary/5" 
+            : isHovered 
+              ? "border-muted-foreground/40 bg-muted/50"
+              : "border-muted-foreground/20 bg-muted/20",
+          isUploading && "opacity-60 cursor-not-allowed pointer-events-none"
+        )}
       >
         <input {...getInputProps()} />
         
-        <Flex direction="column" align="center" gap="3">
-          <Box
-            style={{
-              padding: '12px',
-              background: 'var(--gray-a3)',
-              borderRadius: '50%',
-            }}
-          >
-            <UploadIcon style={{ width: '20px', height: '20px', color: 'var(--gray-11)' }} />
-          </Box>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className={cn(
+            "rounded-full p-3 transition-colors",
+            isHovered ? "bg-primary/10" : "bg-muted"
+          )}>
+            <Upload className="w-5 h-5 text-muted-foreground" />
+          </div>
           
-          <Flex direction="column" align="center" gap="1">
-            <Text size="3" weight="medium" style={{ color: 'var(--gray-12)' }}>
-              {isDragActive ? 'Solte aqui' : 'Escolher arquivos'}
-            </Text>
-            <Text size="2" style={{ color: 'var(--gray-11)' }}>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {isDragActive ? 'Solte aqui' : 'Adicionar arquivos'}
+            </p>
+            <p className="text-xs text-muted-foreground">
               {acceptVideo ? 'Imagens e vídeos' : 'Imagens'}
-            </Text>
-          </Flex>
+            </p>
+          </div>
           
-          <Text size="1" style={{ color: 'var(--gray-9)', textAlign: 'center' }}>
-            Até {maxFileSize}MB • {acceptVideo ? 'JPG, PNG, WebP, GIF, MP4, WebM' : 'JPG, PNG, WebP, GIF'}
-          </Text>
-        </Flex>
-      </Box>
+          <p className="text-[10px] text-muted-foreground">
+            Até {maxFileSize}MB • {acceptVideo ? 'JPG, PNG, WebP, GIF, MP4' : 'JPG, PNG, WebP, GIF'}
+          </p>
+        </div>
+      </div>
 
-      {files.length > 0 && (
-        <Flex wrap="wrap" gap="3">
-          {files.map(renderThumb)}
-        </Flex>
+      {/* Preview das mídias */}
+      {hasFiles && (
+        <div className="flex flex-wrap gap-3">
+          {files.map(renderMediaItem)}
+        </div>
       )}
 
-      {files.length > 0 && hasPendingFiles && (
-        <Button 
-          onClick={handleUpload} 
-          disabled={uploading}
-          style={{
-            background: '#dc2626',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-            height: '44px',
-            cursor: uploading ? 'not-allowed' : 'pointer',
-            borderRadius: '8px'
-          }}
-        >
-          {uploading ? (
-            <Flex align="center" gap="2">
-              <ReloadIcon style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-              Enviando...
-            </Flex>
-          ) : (
-            `Enviar ${pendingCount} ${pendingCount === 1 ? 'arquivo' : 'arquivos'}`
-          )}
-        </Button>
+      {/* Indicador de upload discreto */}
+      {hasUploadingFiles && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50 border border-blue-100">
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-blue-700">
+            Processando...
+          </p>
+        </div>
       )}
 
-      {uploading && (
-        <Flex 
-          align="center" 
-          gap="2" 
-          p="3" 
-          style={{
-            background: 'var(--blue-a2)',
-            border: '1px solid var(--blue-a6)',
-            borderRadius: '8px',
-          }}
-        >
-          <ReloadIcon style={{ width: '16px', height: '16px', color: 'var(--blue-11)', animation: 'spin 1s linear infinite' }} />
-          <Text size="2" style={{ color: 'var(--blue-11)' }}>
-            Fazendo upload... Não feche esta página.
-          </Text>
-        </Flex>
+      {/* Alerta de erro discreto */}
+      {hasErrorFiles && !hasUploadingFiles && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-red-50 border border-red-100">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <p className="text-xs text-red-700">
+            Alguns arquivos falharam. Tente novamente.
+          </p>
+        </div>
       )}
-
-      {hasErrorFiles && (
-        <Flex 
-          align="center" 
-          gap="2" 
-          p="3" 
-          style={{
-            background: 'var(--red-a2)',
-            border: '1px solid var(--red-a6)',
-            borderRadius: '8px',
-          }}
-        >
-          <ExclamationTriangleIcon style={{ width: '16px', height: '16px', color: 'var(--red-11)' }} />
-          <Text size="2" style={{ color: 'var(--red-11)' }}>
-            Alguns arquivos falharam. Clique em "Tentar novamente" ou remova-os.
-          </Text>
-        </Flex>
-      )}
-      
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </Flex>
+    </div>
   );
 }

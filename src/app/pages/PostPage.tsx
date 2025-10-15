@@ -1,19 +1,21 @@
 import { useParams, Link } from 'react-router-dom';
 import { usePost } from '../hooks/usePost';
-import { Box, Flex, Heading, Text, Avatar, Container, Separator, Badge } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChatBubbleIcon, ClockIcon, PersonIcon } from '@radix-ui/react-icons';
+import { MessageCircle, Clock, User, ArrowLeft, Tag } from 'lucide-react';
 import { Carousel } from '../components/Common/Carousel';
 import { PostPageSkeleton } from '../components/Common/Skeleton';
 import { LikeButton } from '../components/Common/LikeButton';
 import { CommentSection } from '../components/Comment/CommentSection';
+import FormattedContent from '../components/Common/FormattedContent';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { Badge } from '../components/ui/badge';
+import { Separator } from '../components/ui/separator';
+
 
 export function PostPage() {
   const { slug } = useParams<{ slug: string }>();
   const { post, loading, error } = usePost(slug, true);
-
-  console.log('Post -', post)
 
   if (loading) {
     return <PostPageSkeleton />;
@@ -21,39 +23,45 @@ export function PostPage() {
 
   if (error) {
     return (
-      <Container size="3" className="py-16">
-        <Box className="text-center">
-          <Heading size="6" className="font-serif text-red-600 mb-4">
+      <div className="container max-w-4xl mx-auto py-16 px-4">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-serif text-red-600">
             Erro ao Carregar Notícia
-          </Heading>
-          <Text size="3" className="font-sans text-gray-600">
+          </h1>
+          <p className="text-muted-foreground">
             {error}
-          </Text>
-          <Box className="mt-6">
-            <Link to="/" className="text-red-600 hover:text-red-700 font-sans font-medium">
-              ← Voltar ao início
-            </Link>
-          </Box>
-        </Box>
-      </Container>
+          </p>
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao início
+          </Link>
+        </div>
+      </div>
     );
   }
 
   if (!post) {
     return (
-      <Container size="3" className="py-16">
-        <Box className="text-center">
-          <Heading size="6" className="font-serif text-black mb-4">
+      <div className="container max-w-4xl mx-auto py-16 px-4">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-serif">
             Notícia Não Encontrada
-          </Heading>
-          <Text size="3" className="font-sans text-gray-600 mb-6">
+          </h1>
+          <p className="text-muted-foreground">
             A notícia que você procura não existe ou foi removida.
-          </Text>
-          <Link to="/" className="text-red-600 hover:text-red-700 font-sans font-medium">
-            ← Voltar ao início
+          </p>
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao início
           </Link>
-        </Box>
-      </Container>
+        </div>
+      </div>
     );
   }
 
@@ -66,144 +74,141 @@ export function PostPage() {
   }
 
   return (
-    <Container size="3" className="py-8">
-      <article className="max-w-4xl mx-auto">
+    <div className="container max-w-4xl mx-auto py-8 px-4">
+      <article>
         
-        {/* Categoria e Breadcrumb */}
+        {/* Breadcrumb e Categoria */}
         {post.category && (
-          <Box className="mb-4">
-            <Flex align="center" gap="2" className="text-sm">
-              <Link to="/" className="text-gray-500 hover:text-red-600 font-sans">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 text-sm">
+              <Link 
+                to="/" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Início
               </Link>
-              <Text className="text-gray-300">•</Text>
-              <Badge color='tomato' variant='solid' className="bg-red-600 text-white font-sans font-bold text-xs px-3 py-1 uppercase tracking-wider">
+              <span className="text-muted-foreground/30">•</span>
+              <Badge 
+                variant="default" 
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold text-[10px] uppercase tracking-wider"
+              >
                 {post.category.name}
               </Badge>
-            </Flex>
-          </Box>
+            </div>
+          </div>
         )}
 
-        {/* Título Principal */}
-        <Heading 
-          as="h1" 
-          size="8" 
-          className="font-serif text-black leading-tight mb-6"
-        >
+        {/* Título */}
+        <h1 className="text-4xl md:text-5xl font-serif leading-tight mb-6 text-balance">
           {post.title}
-        </Heading>
+        </h1>
 
-        {/* Subtítulo/Descrição */}
+        {/* Descrição */}
         {post.description && (
-          <Text 
-            size="4" 
-            className="font-sans text-gray-700 leading-relaxed mb-8 border-l-4 border-red-600 pl-4"
-          >
+          <p className="text-lg text-muted-foreground leading-relaxed mb-8 pl-4 border-l-2 border-red-600">
             {post.description}
-          </Text>
+          </p>
         )}
 
-        {/* Metadados do Autor */}
-        <Box className="mb-8 p-6 mt-2 bg-transparent border-b  border-gray-200">
-          <Flex align="center" justify="between" wrap="wrap" gap="4">
-            <Link to={`/author/${post?.author?.slug}`} className="hover:no-underline">
-              <Flex align="center" gap="4" className="group">
-                <Avatar
-                  size="4"
-                  src={post.author?.avatarUrl || undefined}
-                  fallback={post.author?.name?.[0] || 'A'}
-                  radius="full"
-                  className="border-2 border-gray-200 group-hover:border-red-300 transition-colors duration-200"
-                />
-                <Box>
-                  <Flex align="center" gap="2" className="mb-1">
-                    <PersonIcon width="14" height="14" className="text-gray-400" />
-                    <Text 
-                      weight="bold" 
-                      size="3"
-                      className="font-sans text-black group-hover:text-red-700 transition-colors duration-200"
-                    >
+        {/* Meta Informações do Autor */}
+        <div className="mb-8 pb-6 border-b">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <Link 
+              to={`/author/${post?.author?.slug}`}
+              className="group"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12 border-2 border-transparent group-hover:border-red-200 transition-colors">
+                  <AvatarImage src={post.author?.avatarUrl || undefined} />
+                  <AvatarFallback className="bg-muted">
+                    {post.author?.name?.[0] || 'A'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-sm font-semibold group-hover:text-red-700 transition-colors">
                       {post.author?.name || 'Autor Desconhecido'}
-                    </Text>
-                  </Flex>
-                  <Flex align="center" gap="2">
-                    <ClockIcon width="14" height="14" className="text-gray-400" />
-                    <Text size="2" className="font-sans text-gray-600">
-                      Publicado em {format(new Date(post.createdAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </Text>
-                  </Flex>
-                </Box>
-              </Flex>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    <time>
+                      {format(new Date(post.createdAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </time>
+                  </div>
+                </div>
+              </div>
             </Link>
 
             {/* Estatísticas */}
-            <Flex align="center" gap="6">
+            <div className="flex items-center gap-5">
               <LikeButton postId={post.id} />
-              <Flex align="center" gap="2" className="text-gray-500">
-                <ChatBubbleIcon width="16" height="16" />
-                <Text size="2" className="font-sans font-medium">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">
                   {post.comments?.length || 0}
-                </Text>
-                <Text size="1" className="font-sans text-gray-400">
+                </span>
+                <span className="text-xs">
                   comentários
-                </Text>
-              </Flex>
-            </Flex>
-          </Flex>
-        </Box>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Mídia Principal */}
+        {/* Mídia */}
         {mediaItems.length > 0 && (
-          <Box className="mb-8">
-            <Box className="w-full h-96 overflow-hidden border border-gray-200 shadow-sm">
+          <div className="mb-10">
+            <div className="relative w-full aspect-video overflow-hidden rounded-lg border bg-muted">
               <Carousel items={mediaItems} />
-            </Box>
-          </Box>
+            </div>
+          </div>
         )}
 
         {/* Tags */}
         {post.tags && post.tags.length > 0 && (
-          <Box className="mb-8 mt-4">
-            <Text 
-              size="2" 
-              weight="bold" 
-              className="block mb-3 text-gray-500 font-sans uppercase tracking-wider text-xs"
-            >
-              Assuntos Relacionados
-            </Text>
-            <Flex wrap="wrap" mt={'2'} gap="2">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Assuntos
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
               {post.tags.map(({ tag }) => (
                 <Badge 
-                  color='tomato'
-              
-                  key={tag?.id} 
-                  className="bg-gray-100 text-gray-700 font-sans text-xs px-3 py-1 border border-gray-200 hover:border-red-300 hover:text-red-700 transition-colors duration-200 cursor-pointer"
+                  key={tag?.id}
+                  variant="outline"
+                  className="text-xs font-normal hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors cursor-pointer"
                 >
                   #{tag?.name}
                 </Badge>
               ))}
-            </Flex>
-          </Box>
+            </div>
+          </div>
         )}
         
-        <Separator size="4" className="my-8" />
+        <Separator className="my-10" />
 
-        {/* Conteúdo Principal */}
-        <Box 
-          className="prose prose-lg max-w-none font-sans leading-relaxed text-gray-800 mb-12"
-          dangerouslySetInnerHTML={{ __html: post.content }} 
-          style={{
-            fontSize: '18px',
-            lineHeight: '1.7',
-          }}
-        />
+        {/* Conteúdo */}
+        <FormattedContent content={post.content} className="mb-12" />
 
         {/* Divisor antes dos comentários */}
-        <Box className="border-t-2 border-red-600 border-h-1"></Box>
+        <div className="relative my-12">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-sm text-muted-foreground font-medium">
+              Comentários
+            </span>
+          </div>
+        </div>
 
-        {/* Seção de Comentários */}
+        {/* Comentários */}
         <CommentSection postId={post.id} />
       </article>
-    </Container>
+    </div>
   );
 }

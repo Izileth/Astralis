@@ -1,28 +1,33 @@
-import { Card, Box, Flex, Inset } from '@radix-ui/themes';
+import { Card, CardContent, CardFooter } from '../../ui/card';
+import { Skeleton } from '../../ui/skeleton';
 
 export function PostCardSkeleton() {
   return (
-    <Card>
-      <Inset clip="padding-box" side="top" pb="current">
-        <div className="w-full h-[140px] bg-gray-300 animate-pulse"></div>
-      </Inset>
-      <Box p="3">
-        <div className="h-4 w-1/4 bg-gray-300 rounded animate-pulse mb-2"></div>
-        <div className="h-5 w-3/4 bg-gray-300 rounded animate-pulse mb-2"></div>
-        <div className="h-4 w-full bg-gray-300 rounded animate-pulse mb-3"></div>
-        <Flex align="center" gap="2" mt="3">
-          <div className="w-6 h-6 rounded-full bg-gray-300 animate-pulse"></div>
-          <div className="h-4 w-1/2 bg-gray-300 rounded animate-pulse"></div>
-        </Flex>
-        <Flex wrap="wrap" gap="2" mt="3">
-          <div className="h-5 w-1/4 bg-gray-300 rounded-full animate-pulse"></div>
-          <div className="h-5 w-1/4 bg-gray-300 rounded-full animate-pulse"></div>
-        </Flex>
-        <Flex gap="4" mt="4" pt="3" className="border-t">
-          <div className="h-4 w-1/4 bg-gray-300 rounded animate-pulse"></div>
-          <div className="h-4 w-1/4 bg-gray-300 rounded animate-pulse"></div>
-        </Flex>
-      </Box>
+    <Card className="overflow-hidden border-border/50">
+      <Skeleton className="w-full h-[140px] rounded-none" />
+      <CardContent className="p-4 space-y-3">
+        <Skeleton className="h-4 w-1/4" />
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        
+        <div className="flex items-center gap-2 pt-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+        
+        <div className="flex flex-wrap gap-2 pt-2">
+          <Skeleton className="h-6 w-16 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+      </CardContent>
+      <CardFooter className="px-4 pb-4 pt-0">
+        <div className="flex gap-4 w-full border-t pt-3">
+          <Skeleton className="h-4 w-1/4" />
+          <Skeleton className="h-4 w-1/4" />
+          <Skeleton className="h-4 w-1/4" />
+        </div>
+      </CardFooter>
     </Card>
   );
 }

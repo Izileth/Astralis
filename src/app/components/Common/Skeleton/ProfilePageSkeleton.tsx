@@ -1,53 +1,71 @@
-import { Box, Flex, Card } from '@radix-ui/themes';
+import { Container } from '../Container';
+import { Card, CardContent } from '../../ui/card';
+import { Separator } from '../../ui/separator';
+import { Skeleton } from '../../ui/skeleton';
 import { PostListSkeleton } from './PostListSkeleton';
 
 export function ProfilePageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="w-full h-64 md:h-80 bg-gray-300 animate-pulse"></div>
+      {/* Banner skeleton */}
+      <Skeleton className="w-full h-48 md:h-64 rounded-none" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card className="p-8 md:p-12 -mt-20 relative z-10">
-          <Flex direction="column" align="center" className="text-center space-y-6 mb-12">
-            <div className="w-32 h-32 rounded-full bg-gray-300 animate-pulse"></div>
-            <div className="space-y-3 w-full">
-              <div className="h-12 w-1/2 bg-gray-300 rounded animate-pulse mx-auto"></div>
-              <div className="h-6 w-1/3 bg-gray-300 rounded animate-pulse mx-auto"></div>
-            </div>
-            <Flex className="flex-wrap justify-center gap-8 md:gap-12 w-full">
-              <div className="h-10 w-24 bg-gray-300 rounded animate-pulse"></div>
-              <div className="h-10 w-24 bg-gray-300 rounded animate-pulse"></div>
-              <div className="h-10 w-24 bg-gray-300 rounded animate-pulse"></div>
-            </Flex>
-            <Flex className="flex-wrap justify-center gap-3 w-full">
-              <div className="h-8 w-20 bg-gray-300 rounded-full animate-pulse"></div>
-              <div className="h-8 w-20 bg-gray-300 rounded-full animate-pulse"></div>
-            </Flex>
-          </Flex>
+      <Container className="-mt-16 relative z-10">
+        <Card className="border-0 shadow-none">
+          <CardContent className="p-6 md:p-8">
+            {/* Profile header skeleton */}
+            <div className="flex flex-col items-center text-center space-y-6 mb-8">
+              <Skeleton className="h-24 w-24 md:h-32 md:w-32 rounded-full" />
+              
+              <div className="space-y-3 w-full max-w-md">
+                <Skeleton className="h-8 w-3/4 mx-auto" />
+                <Skeleton className="h-5 w-1/2 mx-auto" />
+              </div>
 
-          <div className="relative mb-12">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <div className="bg-card px-6">
-                <div className="w-2 h-2 bg-accent rounded-full"></div>
+              {/* Stats skeleton */}
+              <div className="flex flex-wrap justify-center gap-6 md:gap-12 w-full max-w-2xl">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="text-center">
+                    <Skeleton className="h-7 w-16 mx-auto mb-1" />
+                    <Skeleton className="h-4 w-20 mx-auto" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Badges skeleton */}
+              <div className="flex flex-wrap justify-center gap-2">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
               </div>
             </div>
-          </div>
 
-          {/* Tabs Skeleton */}
-          <Flex className="flex-wrap justify-center items-center text-center gap-2 mb-8">
-            <div className="h-12 w-24 bg-gray-300 rounded-md animate-pulse"></div>
-            <div className="h-12 w-24 bg-gray-300 rounded-md animate-pulse"></div>
-          </Flex>
+            {/* Separator */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="bg-border/50" />
+              </div>
+              <div className="relative flex justify-center">
+                <div className="bg-background px-4">
+                  <Skeleton className="w-2 h-2 rounded-full" />
+                </div>
+              </div>
+            </div>
 
-          {/* Content Skeleton */}
-          <Box mt="8">
-            <PostListSkeleton />
-          </Box>
+            {/* Tabs skeleton */}
+            <div className="flex justify-center mb-8">
+              <div className="grid grid-cols-2 gap-2 w-full max-w-md">
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            </div>
+
+            {/* Content skeleton */}
+            <div className="mt-8">
+              <PostListSkeleton />
+            </div>
+          </CardContent>
         </Card>
-      </div>
+      </Container>
     </div>
   );
 }

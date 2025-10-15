@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Text, Flex, IconButton, Progress, Button } from '@radix-ui/themes';
-import { UploadIcon, Cross2Icon, ImageIcon, CheckCircledIcon, ExclamationTriangleIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { X, Upload, ImageIcon } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
 import { useCurrentUser, useImageUpload, useImageValidation } from '../../hooks/useUser';
 
 export interface FileWithPreview extends File {
@@ -21,6 +21,7 @@ interface FileUploadProps {
   variant?: 'post' | 'banner' | 'avatar';
   multiple?: boolean;
   userId?: string;
+  className?: string;
 }
 
 export function FileUpload({ 
@@ -28,16 +29,16 @@ export function FileUpload({
   variant = 'post',
   multiple = false,
   userId,
+  className
 }: FileUploadProps) {
   const [files, setFiles] = useState<UploadableFile[]>([]);
+  const [isHovered, setIsHovered] = useState(false);
   
   const { user: currentUser } = useCurrentUser();
   const { uploadUserAvatar, uploadUserBanner, isUploading: globalIsUploading } = useImageUpload();
   const { validateImageFile } = useImageValidation();
-  
-  const [isUploading, setIsUploading] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const validatedFiles: UploadableFile[] = [];
 
     acceptedFiles.forEach(file => {
@@ -64,13 +65,76 @@ export function FileUpload({
         file: Object.assign(file, {
           preview: URL.createObjectURL(file),
         }) as FileWithPreview,
-        status: 'pending',
+        status: 'uploading',
         progress: 0,
       });
     });
 
     setFiles(prevFiles => multiple ? [...prevFiles, ...validatedFiles] : validatedFiles);
-  }, [multiple, variant, validateImageFile]);
+
+    // Upload automático e silencioso
+    for (const uploadableFile of validatedFiles) {
+      if (uploadableFile.status === 'error') continue;
+      
+      try {
+        const targetUserId = userId || currentUser?.id;
+        
+        if (!targetUserId) {
+          throw new Error('Usuário não identificado');
+        }
+
+        // Simula progresso suave
+        const progressInterval = setInterval(() => {
+          setFiles(prev => prev.map(f => 
+            f.file === uploadableFile.file && f.progress < 90
+              ? { ...f, progress: f.progress + 10 }
+              : f
+          ));
+        }, 200);
+
+        let result;
+        if (variant === 'avatar') {
+          result = await uploadUserAvatar(targetUserId, uploadableFile.file);
+        } else if (variant === 'banner') {
+          result = await uploadUserBanner(targetUserId, uploadableFile.file);
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          const mockUrl = `https://picsum.photos/seed/${encodeURIComponent(uploadableFile.file.name)}/800/600`;
+          clearInterval(progressInterval);
+          
+          setFiles(prev => prev.map(f => 
+            f.file === uploadableFile.file 
+              ? { ...f, status: 'success', progress: 100 }
+              : f
+          ));
+          
+          onUploadComplete(mockUrl);
+          continue;
+        }
+
+        clearInterval(progressInterval);
+        
+        setFiles(prev => prev.map(f => 
+          f.file === uploadableFile.file 
+            ? { ...f, status: 'success', progress: 100 }
+            : f
+        ));
+
+        const imageUrl = variant === 'avatar' ? result.avatarUrl : result.bannerUrl;
+        if (imageUrl) {
+          onUploadComplete(imageUrl);
+        }
+
+      } catch (error: any) {
+        console.error(`Erro no upload de ${uploadableFile.file.name}:`, error);
+        setFiles(prev => prev.map(f => 
+          f.file === uploadableFile.file 
+            ? { ...f, status: 'error', error: error.message || 'Erro no upload' }
+            : f
+        ));
+      }
+    }
+  }, [multiple, variant, validateImageFile, userId, currentUser, uploadUserAvatar, uploadUserBanner, onUploadComplete]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -81,86 +145,10 @@ export function FileUpload({
     multiple: variant === 'post' ? multiple : false,
   });
 
-  const handleUpload = async () => {
-    const pendingFiles = files.filter(f => f.status === 'pending');
-    if (pendingFiles.length === 0) return;
-
-    setIsUploading(true);
-    
-    setFiles(prev => prev.map(f => 
-      f.status === 'pending' ? { ...f, status: 'uploading' as const } : f
-    ));
-
-    try {
-      const uploadPromises = pendingFiles.map(async (uploadableFile) => {
-        try {
-          let result;
-          const targetUserId = userId || currentUser?.id;
-          
-          if (!targetUserId) {
-            throw new Error('Usuário não identificado');
-          }
-
-          setFiles(prev => prev.map(f => 
-            f.file === uploadableFile.file ? { ...f, progress: 10 } : f
-          ));
-
-          if (variant === 'avatar') {
-            result = await uploadUserAvatar(targetUserId, uploadableFile.file);
-          } else if (variant === 'banner') {
-            result = await uploadUserBanner(targetUserId, uploadableFile.file);
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const mockUrl = `https://picsum.photos/seed/${encodeURIComponent(uploadableFile.file.name)}/800/600`;
-            onUploadComplete(mockUrl);
-            return { ...uploadableFile, status: 'success' as const, progress: 100 };
-          }
-
-          setFiles(prev => prev.map(f => 
-            f.file === uploadableFile.file ? { ...f, progress: 100 } : f
-          ));
-
-          const imageUrl = variant === 'avatar' ? result.avatarUrl : result.bannerUrl;
-          if (imageUrl) {
-            onUploadComplete(imageUrl);
-          }
-
-          return { ...uploadableFile, status: 'success' as const };
-        } catch (error: any) {
-          console.error(`Erro no upload de ${uploadableFile.file.name}:`, error);
-          return { 
-            ...uploadableFile, 
-            status: 'error' as const, 
-            error: error.message || 'Erro no upload'
-          };
-        }
-      });
-
-      const results = await Promise.all(uploadPromises);
-      
-      setFiles(prev => prev.map(f => {
-        const result = results.find(r => r.file === f.file);
-        return result || f;
-      }));
-
-    } catch (error) {
-      console.error('Erro geral no upload:', error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeFile = (fileToRemove: FileWithPreview) => {
+  const removeFile = (fileToRemove: FileWithPreview, e: React.MouseEvent) => {
+    e.stopPropagation();
     setFiles(prevFiles => prevFiles.filter(f => f.file !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
-  };
-
-  const retryUpload = (uploadableFile: UploadableFile) => {
-    setFiles(prev => prev.map(f => 
-      f.file === uploadableFile.file 
-        ? { ...f, status: 'pending', progress: 0, error: undefined }
-        : f
-    ));
   };
 
   useEffect(() => {
@@ -170,330 +158,141 @@ export function FileUpload({
   const getVariantStyles = () => {
     switch (variant) {
       case 'avatar':
-        return {
-          container: { width: '140px', height: '140px' },
-          dropzone: { 
-            borderRadius: '50%',
-            minHeight: '140px',
-          },
-          thumb: { 
-            width: '140px', 
-            height: '140px', 
-            borderRadius: '50%',
-          },
-        };
+        return 'w-24 h-24 rounded-full';
       case 'banner':
-        return {
-          container: { width: '100%', maxWidth: '600px' },
-          dropzone: { 
-            borderRadius: '12px',
-            minHeight: '180px',
-          },
-          thumb: { 
-            width: '100%', 
-            height: '180px',
-            borderRadius: '12px',
-          },
-        };
+        return 'w-full h-32 rounded-lg';
       case 'post':
       default:
-        return {
-          container: { width: '100%' },
-          dropzone: { 
-            borderRadius: '12px',
-            minHeight: '160px',
-          },
-          thumb: { 
-            width: '120px', 
-            height: '120px',
-            borderRadius: '8px',
-          },
-        };
+        return 'w-full min-h-[120px] rounded-lg';
     }
   };
 
-  const styles = getVariantStyles();
-  const uploading = isUploading || globalIsUploading;
-  const hasPendingFiles = files.some(f => f.status === 'pending');
-  const hasErrorFiles = files.some(f => f.status === 'error');
+  const variantStyles = getVariantStyles();
   const hasFiles = files.length > 0;
+  const hasUploadingFiles = files.some(f => f.status === 'uploading');
 
-  const renderStatusOverlay = (uploadableFile: UploadableFile) => {
-    const { status, progress, error } = uploadableFile;
-    
-    if (status === 'uploading') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: 'inherit',
-          }}
-        >
-          <Box style={{ width: '60%', textAlign: 'center' }}>
-            <Progress 
-              value={progress} 
-              style={{ 
-                width: '100%',
-                height: '4px',
-                marginBottom: '8px'
-              }} 
-            />
-            <Text size="1" style={{ color: 'white', fontWeight: '500' }}>
-              {progress}%
-            </Text>
-          </Box>
-        </Flex>
-      );
-    }
-    
-    if (status === 'success') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '24px',
-            height: '24px',
-            background: 'var(--green-9)',
-            borderRadius: '50%',
-          }}
-        >
-          <CheckCircledIcon style={{ width: '14px', height: '14px', color: 'white' }} />
-        </Flex>
-      );
-    }
-    
-    if (status === 'error') {
-      return (
-        <Flex 
-          align="center" 
-          justify="center"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(239, 68, 68, 0.9)',
-            borderRadius: 'inherit',
-            flexDirection: 'column',
-            gap: '8px',
-            padding: '16px'
-          }}
-        >
-          <ExclamationTriangleIcon style={{ width: '20px', height: '20px', color: 'white' }} />
-          {error && (
-            <Text size="1" style={{ color: 'white', textAlign: 'center', lineHeight: '1.3' }}>
-              {error}
-            </Text>
-          )}
-          <Button 
-            size="1" 
-            variant="solid"
-            color='red'
-            onClick={() => retryUpload(uploadableFile)}
-          >
-            <ReloadIcon style={{ width: '12px', height: '12px' }} />
-            Tentar novamente
-          </Button>
-        </Flex>
-      );
-    }
-    
-    return null;
-  };
-
-  const renderThumb = (uploadableFile: UploadableFile) => {
-    const { file } = uploadableFile;
+  const renderImage = (uploadableFile: UploadableFile) => {
+    const { file, status, progress } = uploadableFile;
     
     return (
-      <Box 
-        key={file.name} 
-        style={{ 
-          position: 'relative',
-          ...styles.thumb,
-          overflow: 'hidden',
-          border: '1px solid var(--gray-a6)',
-        }}
-      >
-        {file.type.startsWith('image/') ? (
-          <img 
-            src={file.preview} 
-            alt={`Preview`}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover',
-            }} 
-          />
-        ) : (
-          <Flex 
-            align="center" 
-            justify="center" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              background: 'var(--gray-a3)' 
-            }}
-          >
-            <ImageIcon style={{ width: '24px', height: '24px', color: 'var(--gray-a9)' }} />
-          </Flex>
+      <div 
+        key={file.name}
+        className={cn(
+          "relative group overflow-hidden bg-muted",
+          variant === 'avatar' ? 'w-24 h-24 rounded-full' : 
+          variant === 'banner' ? 'w-full h-32 rounded-lg' :
+          'w-28 h-28 rounded-lg'
         )}
+      >
+        <img 
+          src={file.preview} 
+          alt="Preview"
+          className={cn(
+            "w-full h-full object-cover transition-all duration-300",
+            status === 'uploading' && "blur-[2px] scale-105"
+          )}
+        />
         
-        {renderStatusOverlay(uploadableFile)}
-        
-        {/* Botão de remover */}
-        <IconButton 
-          size="1" 
-          variant="solid" 
-          color="gray"
-          highContrast
-          onClick={() => removeFile(file)} 
-          style={{ 
-            position: 'absolute', 
-            top: '6px', 
-            right: '6px',
-            width: '24px',
-            height: '24px',
-            background: 'rgba(0, 0, 0, 0.6)',
-            border: 'none',
-            cursor: 'pointer',
-            opacity: uploadableFile.status === 'uploading' ? 0.5 : 1,
-            pointerEvents: uploadableFile.status === 'uploading' ? 'none' : 'auto'
-          }} 
-        >
-          <Cross2Icon style={{ width: '12px', height: '12px' }} />
-        </IconButton>
-      </Box>
+        {/* Loading overlay sutil */}
+        {status === 'uploading' && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] transition-opacity">
+            <div 
+              className="absolute bottom-0 left-0 h-0.5 bg-white/80 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+
+        {/* Botão de remover discreto */}
+        {status !== 'uploading' && (
+          <button
+            onClick={(e) => removeFile(file, e)}
+            className={cn(
+              "absolute top-2 right-2 w-6 h-6 rounded-full",
+              "bg-black/60 hover:bg-black/80",
+              "flex items-center justify-center",
+              "opacity-0 group-hover:opacity-100",
+              "transition-all duration-200",
+              "backdrop-blur-sm"
+            )}
+          >
+            <X className="w-3.5 h-3.5 text-white" />
+          </button>
+        )}
+
+        {/* Erro sutil */}
+        {status === 'error' && (
+          <div className="absolute inset-0 bg-red-500/10 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-xs text-red-600 font-medium px-2 py-1 bg-white/90 rounded">
+              Erro
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
-  const renderDropzone = () => (
-    <Box
-      {...getRootProps()}
-      style={{
-        ...styles.dropzone,
-        border: isDragActive 
-          ? '2px solid var(--blue-8)' 
-          : hasFiles && variant !== 'post' 
-            ? 'none' 
-            : '2px dashed var(--gray-a7)',
-        background: isDragActive 
-          ? 'var(--blue-a2)' 
-          : hasFiles && variant !== 'post' 
-            ? 'transparent' 
-            : 'var(--gray-a1)',
-        cursor: uploading ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        opacity: uploading ? 0.6 : 1,
-        pointerEvents: uploading ? 'none' : 'auto',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-      }}
-    >
-      <input {...getInputProps()} />
-      
-      {!hasFiles || variant === 'post' ? (
-        <Flex direction="column" align="center" gap="3">
-          <Box
-            style={{
-              padding: '12px',
-              background: 'var(--gray-a3)',
-              borderRadius: '50%',
-            }}
-          >
-            <UploadIcon style={{ width: '20px', height: '20px', color: 'var(--gray-11)' }} />
-          </Box>
-          
-          <Flex direction="column" align="center" gap="1">
-            <Text size="2" weight="medium" style={{ color: 'var(--gray-12)' }}>
-              {isDragActive ? 'Solte aqui' : 'Escolher arquivo'}
-            </Text>
-            <Text size="1" style={{ color: 'var(--gray-11)' }}>
-              {variant === 'avatar' && 'Imagem do perfil'}
-              {variant === 'banner' && 'Imagem do Banner'}
-              {variant === 'post' && 'Imagens ou vídeos'}
-            </Text>
-          </Flex>
-          
-          {variant !== 'avatar' && (
-            <Text size="1" style={{ color: 'var(--gray-9)' }}>
-              {variant === 'banner' ? 'Até 10MB' : 'Até 5MB'} • JPG, PNG, WEBP
-            </Text>
-          )}
-        </Flex>
-      ) : null}
-      
-      {hasFiles && variant !== 'post' && renderThumb(files[0])}
-    </Box>
-  );
-
   return (
-    <Flex direction="column" gap="4" style={styles.container}>
-      {renderDropzone()}
-
-      {hasFiles && variant === 'post' && (
-        <Flex wrap="wrap" gap="3">
-          {files.map(renderThumb)}
-        </Flex>
-      )}
-
-      {hasFiles && hasPendingFiles && (
-        <Button 
-          onClick={handleUpload} 
-          disabled={uploading}
-          color='tomato'
-          style={{
-            background: '#dc2626',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-            height: '40px',
-            cursor: uploading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {uploading ? (
-            <Flex align="center" gap="2">
-              <ReloadIcon style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-              Enviando...
-            </Flex>
-          ) : (
-            `Enviar ${files.filter(f => f.status === 'pending').length > 1 ? 'arquivos' : 'arquivo'}`
+    <div className={cn("relative", className)}>
+      {/* Dropzone */}
+      {(!hasFiles || variant === 'post') && (
+        <div
+          {...getRootProps()}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className={cn(
+            variantStyles,
+            "border-2 border-dashed transition-all duration-200 cursor-pointer",
+            "flex items-center justify-center",
+            isDragActive 
+              ? "border-primary bg-primary/5" 
+              : isHovered 
+                ? "border-muted-foreground/40 bg-muted/50"
+                : "border-muted-foreground/20 bg-muted/20"
           )}
-        </Button>
+        >
+          <input {...getInputProps()} />
+          
+          <div className="flex flex-col items-center gap-2 text-center px-4">
+            <div className={cn(
+              "rounded-full p-2 transition-colors",
+              isHovered ? "bg-primary/10" : "bg-muted"
+            )}>
+              {variant === 'post' ? (
+                <ImageIcon className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <Upload className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+            
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-foreground">
+                {isDragActive ? 'Solte aqui' : 'Adicionar'}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {variant === 'banner' ? 'até 10MB' : 'até 5MB'}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
-      {hasErrorFiles && (
-        <Flex 
-          align="center" 
-          gap="2" 
-          p="3" 
-          style={{
-            background: 'var(--red-a2)',
-            border: '1px solid var(--red-a6)',
-            borderRadius: '8px',
-          }}
-        >
-          <ExclamationTriangleIcon style={{ width: '16px', height: '16px', color: 'var(--red-11)' }} />
-          <Text size="2" style={{ color: 'var(--red-11)' }}>
-            Alguns arquivos falharam. Clique em "Tentar novamente" ou remova-os.
-          </Text>
-        </Flex>
+      {/* Preview das imagens */}
+      {hasFiles && (
+        <div className={cn(
+          "flex gap-3",
+          variant === 'post' ? "flex-wrap" : ""
+        )}>
+          {files.map(renderImage)}
+        </div>
       )}
-      
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </Flex>
+
+      {/* Loading indicator discreto */}
+      {hasUploadingFiles && (
+        <div className="absolute -bottom-6 left-0 right-0 h-0.5 bg-muted overflow-hidden">
+          <div className="h-full bg-primary/60 animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
+    </div>
   );
 }

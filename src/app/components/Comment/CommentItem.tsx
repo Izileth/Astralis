@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Avatar, Box, Flex, Text, IconButton, DropdownMenu } from '@radix-ui/themes';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '..//ui/dropdown-menu';
+import { Badge } from '../ui/badge';
+import { MoreHorizontal, Edit, Trash2} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { DotsHorizontalIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import useAuthStore from '../../store/auth';
 import type { Comment, UpdateComment } from '../../types';
 import { CommentLikeButton } from './CommentLikeButton';
@@ -17,70 +20,123 @@ interface CommentItemProps {
 export function CommentItem({ comment, onUpdate, onDelete }: CommentItemProps) {
   const { user } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isOwner = user?.id === comment.authorId;
+  const isEdited = comment.createdAt !== comment.createdAt;
 
   const handleUpdate = async (data: UpdateComment) => {
     await onUpdate(comment.id, data);
     setIsEditing(false);
   };
 
+  const handleDelete = async () => {
+    if (window.confirm('Tem certeza que deseja excluir este comentário?')) {
+      setIsDeleting(true);
+      try {
+        await onDelete(comment.id);
+      } catch (error) {
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  if (isDeleting) {
+    return (
+      <div className="flex gap-3 py-4 border-b border-border/50 last:border-b-0 opacity-50">
+        <Avatar className="h-8 w-8 md:h-10 md:w-10">
+          <AvatarFallback className="text-xs">
+            <Trash2 className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 flex items-center">
+          <span className="text-sm text-muted-foreground">
+            Excluindo comentário...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Box py="3">
-      <Flex gap="3">
-        <Avatar
-          size="2"
-          src={comment.author?.avatarUrl || undefined}
-          fallback={comment.author?.name?.[0] || 'U'}
-          radius="full"
-        />
-        <Box style={{ flexGrow: 1 }}>
-          <Flex justify="between">
-            <Flex align="center" gap="2">
-              <Text weight="bold" size="2">{comment.author?.name || 'Usuário'}</Text>
-              <Text size="1" color="gray">
-                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: ptBR })}
-              </Text>
-            </Flex>
-            {isOwner && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                  <IconButton variant="ghost" size="1">
-                    <DotsHorizontalIcon />
-                  </IconButton>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Item onClick={() => setIsEditing(true)}>
-                    <Pencil1Icon /> Editar
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item color="red" onClick={() => onDelete(comment.id)}>
-                    <TrashIcon /> Deletar
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
+    <div className="flex gap-3 py-4 border-b border-border/50 last:border-b-0 group">
+      <Avatar className="h-8 w-8 md:h-10 md:w-10">
+        <AvatarImage src={comment.author?.avatarUrl || undefined} />
+        <AvatarFallback className="text-xs">
+          {comment.author?.name?.[0]?.toUpperCase() || 'U'}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm text-foreground">
+              {comment.author?.name || 'Usuário'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(comment.createdAt), { 
+                addSuffix: true, 
+                locale: ptBR 
+              })}
+            </span>
+            {isEdited && (
+              <Badge variant="outline" className="text-xs px-1.5 py-0">
+                editado
+              </Badge>
             )}
-          </Flex>
+          </div>
 
-          {isEditing ? (
-            <Box mt="2">
-              <CommentForm
-                onSubmit={handleUpdate}
-                initialData={comment}
-                submitButtonText="Salvar"
-                onCancel={() => setIsEditing(false)}
-              />
-            </Box>
-          ) : (
-            <Text as="p" size="2" mt="1">
-              {comment.content}
-            </Text>
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Abrir menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleDelete}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
+        </div>
 
-          <Flex mt="2">
+        {isEditing ? (
+          <div className="mt-3">
+            <CommentForm
+              onSubmit={handleUpdate}
+              initialData={comment}
+              submitButtonText="Salvar"
+              onCancel={() => setIsEditing(false)}
+              maxLength={500}
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-foreground mt-1 leading-relaxed whitespace-pre-wrap">
+            {comment.content}
+          </p>
+        )}
+
+        {!isEditing && (
+          <div className="mt-2">
             <CommentLikeButton commentId={comment.id} />
-          </Flex>
-        </Box>
-      </Flex>
-    </Box>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,31 +1,51 @@
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Card } from '@radix-ui/themes';
+import { Container } from '../components/Common/Container';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useCreatePost } from '../hooks/usePost';
 import { PostForm } from '../components/Post/PostForm';
 import type { PostFormData } from '../components/Post/PostForm';
+import { useToast } from '../hooks/useToast';
 
 export function CreatePostPage() {
   const navigate = useNavigate();
-  const { createPost, loading, error } = useCreatePost();
+  const { createPost, loading } = useCreatePost();
+  const { toast } = useToast();
 
   const handleSubmit = async (data: PostFormData) => {
-    const newPost = await createPost(data);
-    if (newPost) {
-      // Redireciona para a página do novo post ou para o perfil
-      navigate(`/post/${newPost.slug}`);
+    try {
+      const newPost = await createPost(data);
+      if (newPost) {
+        toast(
+          {
+            title: "Publicação criada",
+            description: "Sua publicação foi criada com sucesso.",
+          }
+        );
+        navigate(`/post/${newPost.slug}`);
+      }
+    } catch (error) {
+      toast(
+        {
+          title: "Erro ao criar",
+          description: "Ocorreu um erro ao criar a publicação.",
+        }
+      );
     }
   };
 
   return (
-    <Container size="3" py="8">
-      <Card>
-        <Heading mb="5">Criar Nova Publicação</Heading>
-        {error && <p style={{ color: 'red' }}>Erro ao criar post: {error}</p>}
-        <PostForm 
-          onSubmit={handleSubmit} 
-          isSubmitting={loading} 
-          submitButtonText="Publicar"
-        />
+    <Container className="py-8 max-w-4xl">
+      <Card className="border-0 shadow-none">
+        <CardHeader className="px-0 pt-0">
+          <CardTitle className="text-2xl font-light">Nova publicação</CardTitle>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          <PostForm 
+            onSubmit={handleSubmit} 
+            isSubmitting={loading} 
+            submitButtonText="Publicar"
+          />
+        </CardContent>
       </Card>
     </Container>
   );
