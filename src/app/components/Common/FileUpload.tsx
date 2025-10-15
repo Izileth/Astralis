@@ -35,7 +35,7 @@ export function FileUpload({
   const [isHovered, setIsHovered] = useState(false);
   
   const { user: currentUser } = useCurrentUser();
-  const { uploadUserAvatar, uploadUserBanner, isUploading: globalIsUploading } = useImageUpload();
+  const { uploadUserAvatar, uploadUserBanner} = useImageUpload();
   const { validateImageFile } = useImageValidation();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {

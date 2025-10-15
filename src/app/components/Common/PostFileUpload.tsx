@@ -215,7 +215,7 @@ export function PostFileUpload({
   };
 
   const renderMediaItem = (uploadableFile: UploadableFile) => {
-    const { file, status, progress, error } = uploadableFile;
+    const { file, status, progress } = uploadableFile;
     const isVideo = file.type.startsWith('video/');
     
     return (
