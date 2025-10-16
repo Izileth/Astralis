@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { postService } from '../../services/post';
 import  type{ Category, Tag } from '../../types';
 interface SearchSidebarProps {
-  onReset?: () => void;
+  onClose?: () => void;
 }
 
 import { Button } from '../ui/button';
@@ -13,7 +13,7 @@ import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 
-export function SearchSidebar({ onReset: onResetProp }: SearchSidebarProps) {
+export function SearchSidebar({ onClose }: SearchSidebarProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -50,6 +50,7 @@ export function SearchSidebar({ onReset: onResetProp }: SearchSidebarProps) {
       params.set('tags', filters.tags.join(','));
     }
     navigate(`/search?${params.toString()}`);
+    onClose?.();
   };
 
   const handleSearch = (): void => {
@@ -74,9 +75,7 @@ export function SearchSidebar({ onReset: onResetProp }: SearchSidebarProps) {
     setSearchTerm('');
     setSelectedCategory('');
     setSelectedTags([]);
-    if (onResetProp) {
-      onResetProp();
-    }
+    onClose?.();
     navigate('/search');
   };
 
@@ -86,7 +85,7 @@ export function SearchSidebar({ onReset: onResetProp }: SearchSidebarProps) {
     <div className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold font-serif text-red-600 uppercase tracking-wide">Filtros</h3>
+          <h3 className="text-lg font-semibold  text-red-600 uppercase tracking-wide">Filtros</h3>
           {hasFilters && (
             <Button
               variant="ghost"

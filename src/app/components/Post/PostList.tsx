@@ -212,9 +212,9 @@ export const PostList: React.FC<PostListProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col bg-transparent gap-6">
       {loading && posts.length > 0 && (
-        <div className="fixed top-20 right-5 z-50 bg-background border rounded-lg py-2 px-3">
+        <div className="fixed top-20 right-5 z-50 bg-transparent border rounded-lg py-2 px-3">
           <div className="flex items-center gap-2">
             <RefreshCcw className="h-4 w-4 animate-spin" />
             <p className="text-sm">Sincronizando...</p>

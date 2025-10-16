@@ -36,21 +36,24 @@ interface NavigationItem {
 
 interface MobileSidebarProps {
   navigationItems: NavigationItem[];
-  onSearchClick?: () => void;
+  onClose?: () => void;
 }
 
 export function MobileSidebar({ 
   navigationItems,
+  onClose,
 }: MobileSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuthStore();
 
   const handleNavigation = (path: string) => {
+    onClose?.();
     navigate(path);
   };
 
   const handleLogout = () => {
+    onClose?.();
     logout();
     navigate('/login');
   };
