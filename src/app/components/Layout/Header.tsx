@@ -32,6 +32,9 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Badge } from '../ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 
+import { postService } from '../../services/post';
+import  type { Category, Tag as TagType } from '../../types';
+
 import useAuthStore from '../../store/auth';
 import { MobileSidebar } from './MobileSidebar';
 import Logo from '../Common/BrandIcon';
@@ -43,6 +46,8 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
   const { isAuthenticated, user, logout } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<TagType[]>([]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,6 +55,22 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [categoriesResponse, tagsResponse] = await Promise.all([
+        postService.getAllCategories(),
+        postService.getAllTags(),
+      ]);
+      if (categoriesResponse.success && categoriesResponse.data) {
+        setCategories((categoriesResponse.data as any).categories || []);
+      }
+      if (tagsResponse.success && tagsResponse.data) {
+        setTags((tagsResponse.data as any).tags || []);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleLogout = () => {
@@ -67,25 +88,21 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
       label: 'Categorias',
       href: '/categories',
       icon: FolderOpen,
-      items: [
-        { label: 'Tecnologia', href: '/category/technology', count: 124 },
-        { label: 'Design', href: '/category/design', count: 89 },
-        { label: 'Negócios', href: '/category/business', count: 67 },
-        { label: 'Ciência', href: '/category/science', count: 45 },
-        { label: 'Arte', href: '/category/art', count: 78 },
-      ]
+      items: categories.map((category) => ({
+        label: category.name,
+        href: `/search?category=${encodeURIComponent(category.name)}`,
+        count: category._count?.posts ?? 0,
+      })),
     },
     {
       label: 'Tags',
       href: '/tags',
       icon: Tag,
-      items: [
-        { label: 'React', href: '/tag/react', count: 56 },
-        { label: 'JavaScript', href: '/tag/javascript', count: 89 },
-        { label: 'TypeScript', href: '/tag/typescript', count: 34 },
-        { label: 'Node.js', href: '/tag/nodejs', count: 23 },
-        { label: 'UI/UX', href: '/tag/ui-ux', count: 45 },
-      ]
+      items: tags.map((tag) => ({
+        label: tag.name,
+        href: `/search?tags=${encodeURIComponent(tag.name)}`,
+        count: tag._count?.posts ?? 0,
+      })),
     },
     {
       label: 'Autores',
@@ -214,7 +231,7 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
             {/* User Menu */}
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuSubTrigger asChild>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9 border-2 border-primary/10">
                       <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name || 'User'} />
@@ -223,7 +240,7 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
                       </AvatarFallback>
                     </Avatar>
                   </Button>
-                </DropdownMenuSubTrigger>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
@@ -281,7 +298,11 @@ export function Header({ onDesktopSearchIconClick }: { onSearchIconClick: () => 
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                  <MobileSidebar 
+                    isOpen={isSidebarOpen} 
+                    onClose={() => setIsSidebarOpen(false)} 
+                    navigationItems={navigationItems} 
+                  />
               </SheetContent>
             </Sheet>
           </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePosts, usePagination } from '../../hooks/usePost';
+import type { Post } from '../../types';
 import { PostCard } from './PostCard';
 import { PostListSkeleton } from '../Common/Skeleton';
 import { RefreshCcw, AlertCircle, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,6 +9,10 @@ import { Card, CardContent } from '../ui/card';
 
 interface PostListProps {
   isOwner?: boolean;
+  posts?: Post[]; // Props opcional para posts externos
+  loading?: boolean; // Props opcional para loading externo
+  error?: string; // Props opcional para error externo
+  showPagination?: boolean; // Controla se mostra paginação
 }
 
 const ErrorType = {
@@ -69,9 +74,22 @@ const getErrorInfo = (error: string): ErrorInfo => {
   };
 };
 
-export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
-  const { posts, loading, error, refetch } = usePosts();
+export const PostList: React.FC<PostListProps> = ({ 
+  isOwner = false,
+  posts: externalPosts,
+  loading: externalLoading,
+  error: externalError,
+  showPagination = true
+}) => {
+  // Se posts externos forem fornecidos, usa eles, senão usa o hook
+  const hookData = usePosts();
   const { goToNext, goToPrev, hasNext, hasPrev, pagination } = usePagination();
+  
+  // Usa dados externos se fornecidos, senão usa do hook
+  const posts = externalPosts !== undefined ? externalPosts : hookData.posts;
+  const loading = externalLoading !== undefined ? externalLoading : hookData.loading;
+  const error = externalError !== undefined ? externalError : hookData.error;
+  const refetch = hookData.refetch;
   
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryAttempts, setRetryAttempts] = useState(0);
@@ -102,7 +120,7 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
     
     try {
       await refetch();
-      setRetryAttempts(0); // Reset counter on success
+      setRetryAttempts(0);
     } catch (err) {
       // Error será capturado pelo hook
     } finally {
@@ -214,7 +232,7 @@ export const PostList: React.FC<PostListProps> = ({ isOwner = false }) => {
         ))}
       </div>
 
-      {pagination.totalPages > 1 && (
+      {showPagination && pagination.totalPages > 1 && (
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <Button

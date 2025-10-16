@@ -245,7 +245,7 @@ class PostService {
   async search(query: string, params?: PostsParams): Promise<ApiResponse<PostApiResponse<Post>>> {
     try {
       const response = await apiClient.get('/api/posts/utils/search', { 
-        params: { ...params, q: query } 
+        params: { ...params, query: query } 
       });
       return {
         success: true,

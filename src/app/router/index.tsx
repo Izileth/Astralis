@@ -8,6 +8,7 @@ import { ProfilePage } from '../pages/ProfilePage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { SocialAuthCallbackPage } from '../pages/SocialAuthCallbackPage';
+import { SearchPage } from '../pages/SearchPage';
 import { PostPage } from '../pages/PostPage';
 import { UserPage } from '../pages/UserPage';
 import { CreatePostPage } from '../pages/CreatePostPage';
@@ -55,6 +56,7 @@ function AppRoutes() {
       <Route path="/post/:slug" element={<PostPage />} />
       <Route path="/user/:slug" element={<UserPage />} />
       <Route path="/author/:slug" element={<AuthorProfilePage />} />
+      <Route path="/search" element={<SearchPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/profile" element={<ProfilePage />} />

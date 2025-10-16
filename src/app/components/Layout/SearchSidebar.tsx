@@ -1,91 +1,65 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { postService } from '../../services/post';
+import  type{ Category, Tag } from '../../types';
+interface SearchSidebarProps {
+  onReset?: () => void;
+}
 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 
-// Tipos
-interface Category {
-  id: number;
-  name: string;
-}
+export function SearchSidebar({ onReset: onResetProp }: SearchSidebarProps) {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
-interface Tag {
-  id: number;
-  name: string;
-}
+  useEffect(() => {
+    const fetchData = async () => {
+      const [categoriesResponse, tagsResponse] = await Promise.all([
+        postService.getAllCategories(),
+        postService.getAllTags(),
+      ]);
+      
+      if (categoriesResponse.success && categoriesResponse.data) {
+        setCategories((categoriesResponse.data as any).categories || []);
+      }
+      if (tagsResponse.success && tagsResponse.data) {
+        setTags((tagsResponse.data as any).tags || []);
+      }
+    };
+    fetchData();
+  }, []);
 
-interface SearchSidebarProps {
-  categories?: Category[];
-  tags?: Tag[];
-  currentFilters?: {
-    search?: string;
-    categoryName?: string;
-    tagNames?: string[];
+  const applyFilters = (filters: { search?: string; category?: string; tags?: string[] }) => {
+    const params = new URLSearchParams();
+    if (filters.search) {
+      params.set('query', filters.search);
+    }
+    if (filters.category) {
+      params.set('category', filters.category);
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      params.set('tags', filters.tags.join(','));
+    }
+    navigate(`/search?${params.toString()}`);
   };
-  onFiltersChange?: (filters: {
-    search?: string;
-    categoryName?: string;
-    tagNames?: string[];
-    page?: number;
-  }) => void;
-  onReset?: () => void;
-}
-
-// Mock data para demonstração
-const mockCategories: Category[] = [
-  { id: 1, name: 'Política' },
-  { id: 2, name: 'Economia' },
-  { id: 3, name: 'Esportes' },
-  { id: 4, name: 'Cultura' },
-  { id: 5, name: 'Tecnologia' }
-];
-
-const mockTags: Tag[] = [
-  { id: 1, name: 'Eleições' },
-  { id: 2, name: 'Mercado' },
-  { id: 3, name: 'Futebol' },
-  { id: 4, name: 'Cinema' },
-  { id: 5, name: 'IA' },
-  { id: 6, name: 'Saúde' },
-  { id: 7, name: 'Educação' }
-];
-
-export function SearchSidebar({
-  categories = mockCategories,
-  tags = mockTags,
-  currentFilters = {},
-  onFiltersChange,
-  onReset: onResetProp
-}: SearchSidebarProps) {
-  const [searchTerm, setSearchTerm] = useState<string>(currentFilters.search || '');
-  const [selectedCategory, setSelectedCategory] = useState<string>(currentFilters.categoryName || '');
-  const [selectedTags, setSelectedTags] = useState<string[]>(currentFilters.tagNames || []);
 
   const handleSearch = (): void => {
-    if (onFiltersChange) {
-      onFiltersChange({ 
-        search: searchTerm, 
-        categoryName: selectedCategory, 
-        tagNames: selectedTags, 
-        page: 1 
-      });
-    }
+    applyFilters({ search: searchTerm, category: selectedCategory, tags: selectedTags });
   };
 
   const handleCategoryChange = (categoryName: string): void => {
     const newCategory = categoryName === selectedCategory ? '' : categoryName;
     setSelectedCategory(newCategory);
-    if (onFiltersChange) {
-      onFiltersChange({ 
-        search: searchTerm, 
-        categoryName: newCategory, 
-        tagNames: selectedTags, 
-        page: 1 
-      });
-    }
+    applyFilters({ search: searchTerm, category: newCategory, tags: selectedTags });
   };
 
   const handleTagChange = (tagName: string): void => {
@@ -93,14 +67,7 @@ export function SearchSidebar({
       ? selectedTags.filter((t: string) => t !== tagName)
       : [...selectedTags, tagName];
     setSelectedTags(newTags);
-    if (onFiltersChange) {
-      onFiltersChange({ 
-        search: searchTerm, 
-        categoryName: selectedCategory, 
-        tagNames: newTags, 
-        page: 1 
-      });
-    }
+    applyFilters({ search: searchTerm, category: selectedCategory, tags: newTags });
   };
 
   const handleReset = (): void => {
@@ -110,9 +77,7 @@ export function SearchSidebar({
     if (onResetProp) {
       onResetProp();
     }
-    if (onFiltersChange) {
-      onFiltersChange({ search: '', categoryName: '', tagNames: [], page: 1 });
-    }
+    navigate('/search');
   };
 
   const hasFilters: boolean = Boolean(searchTerm || selectedCategory || selectedTags.length > 0);
@@ -163,16 +128,20 @@ export function SearchSidebar({
           <div className="mb-6">
             <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Editorias</label>
             <div className='flex flex-col justify-start gap-1 pt-2 items-start'>
-              {categories.map((category: Category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.name ? "secondary" : "ghost"}
-                  onClick={() => handleCategoryChange(category.name)}
-                  className="w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium"
-                >
-                  {category.name}
-                </Button>
-              ))}
+              {categories.length > 0 ? (
+                categories.map((category: Category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.name ? "secondary" : "ghost"}
+                    onClick={() => handleCategoryChange(category.name)}
+                    className="w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium"
+                  >
+                    {category.name}
+                  </Button>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 px-4">Nenhuma editoria disponível</p>
+              )}
             </div>
           </div>
 
@@ -181,17 +150,21 @@ export function SearchSidebar({
           <div className="mb-6">
             <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Assuntos</label>
             <div className="flex flex-wrap gap-2 pt-2">
-              {tags.map((tag: Tag) => (
-                <Button
-                  key={tag.id}
-                  size="sm"
-                  variant={selectedTags.includes(tag.name) ? "destructive" : "outline"}
-                  onClick={() => handleTagChange(tag.name)}
-                  className="font-sans text-xs transition-all duration-200"
-                >
-                  #{tag.name}
-                </Button>
-              ))}
+              {tags.length > 0 ? (
+                tags.map((tag: Tag) => (
+                  <Button
+                    key={tag.id}
+                    size="sm"
+                    variant={selectedTags.includes(tag.name) ? "destructive" : "outline"}
+                    onClick={() => handleTagChange(tag.name)}
+                    className="font-sans text-xs transition-all duration-200"
+                  >
+                    #{tag.name}
+                  </Button>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">Nenhum assunto disponível</p>
+              )}
             </div>
           </div>
 
