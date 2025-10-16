@@ -1,393 +1,335 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  X, 
-  Home, 
   User, 
   LogOut, 
   LogIn, 
   Plus, 
   BookOpen,
-  FolderOpen,
-  Tag,
-  Users,
-  TrendingUp,
-  Star,
   Settings,
   Bell,
-  Search,
-  ChevronRight
+
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 
 import { Button } from '../ui/button';
-import { Separator } from '../ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '../ui/sheet';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 import useAuthStore from '../../store/auth';
 import { cn } from '@/app/lib/utils';
 
-interface MobileSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  navigationItems?: any[];
-  isAuthenticated?: boolean;
-  user?: any;
-  onSearchClick?: () => void;
-  onLogout?: () => void;
+interface NavigationItem {
+  label: string;
+  href: string;
+  icon?: any;
+  badge?: string | number;
+  items?: Array<{
+    label: string;
+    href: string;
+    count?: number;
+  }>;
 }
 
-const NavLink = ({ 
-  children, 
-  onClick, 
-  icon, 
-  variant = 'default',
-  badge,
-  withChevron = false
-}: { 
-  children: React.ReactNode; 
-  onClick: () => void;
-  icon?: React.ReactNode;
-  variant?: 'default' | 'primary' | 'danger' | 'accent';
-  badge?: string | number;
-  withChevron?: boolean;
-}) => {
-  return (
-    <button 
-      onClick={onClick} 
-      className={cn(
-        "w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-all duration-200 font-medium text-sm rounded-lg group",
-        "hover:bg-accent hover:text-accent-foreground",
-        variant === 'primary' && "bg-primary/10 text-primary hover:bg-primary/20",
-        variant === 'danger' && "text-destructive hover:bg-destructive/10",
-        variant === 'accent' && "bg-accent text-accent-foreground"
-      )}
-    >
-      <div className="flex items-center gap-3">
-        {icon && (
-          <span className={cn(
-            "w-5 h-5 flex items-center justify-center transition-colors",
-            variant === 'primary' && "text-primary",
-            variant === 'danger' && "text-destructive"
-          )}>
-            {icon}
-          </span>
-        )}
-        <span className="flex-1">{children}</span>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {badge && (
-          <Badge variant="secondary" className="text-xs px-1.5 py-0 min-w-[20px]">
-            {badge}
-          </Badge>
-        )}
-        {withChevron && (
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-        )}
-      </div>
-    </button>
-  );
-};
-
-const NavigationSection = ({ 
-  title, 
-  children 
-}: { 
-  title: string; 
-  children: React.ReactNode;
-}) => (
-  <div className="space-y-2">
-    <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-      {title}
-    </h3>
-    {children}
-  </div>
-);
+interface MobileSidebarProps {
+  navigationItems: NavigationItem[];
+  onSearchClick?: () => void;
+}
 
 export function MobileSidebar({ 
-  isOpen, 
-  onClose, 
-  navigationItems = [],
-  isAuthenticated,
-  user,
-  onSearchClick,
-  onLogout 
+  navigationItems,
 }: MobileSidebarProps) {
   const navigate = useNavigate();
-  const auth = useAuthStore();
-  
-  // Fallback para props opcionais
-  const authenticated = isAuthenticated ?? auth.isAuthenticated;
-  const currentUser = user ?? auth.user;
-  const logout = onLogout ?? auth.logout;
-
-  const defaultNavigationItems = [
-    {
-      label: 'Início',
-      href: '/',
-      icon: Home,
-    },
-    {
-      label: 'Categorias',
-      href: '/categories',
-      icon: FolderOpen,
-      items: [
-        { label: 'Tecnologia', href: '/category/technology', count: 124 },
-        { label: 'Design', href: '/category/design', count: 89 },
-        { label: 'Negócios', href: '/category/business', count: 67 },
-      ]
-    },
-    {
-      label: 'Tags',
-      href: '/tags',
-      icon: Tag,
-      items: [
-        { label: 'React', href: '/tag/react', count: 56 },
-        { label: 'JavaScript', href: '/tag/javascript', count: 89 },
-        { label: 'TypeScript', href: '/tag/typescript', count: 34 },
-      ]
-    },
-    {
-      label: 'Autores',
-      href: '/authors',
-      icon: Users,
-      badge: '12'
-    },
-    {
-      label: 'Populares',
-      href: '/popular',
-      icon: TrendingUp,
-    },
-    {
-      label: 'Recomendados',
-      href: '/featured',
-      icon: Star,
-    }
-  ];
-
-  const navItems = navigationItems.length > 0 ? navigationItems : defaultNavigationItems;
+  const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const handleNavigation = (path: string) => {
-    onClose();
     navigate(path);
   };
 
   const handleLogout = () => {
     logout();
-    onClose();
     navigate('/login');
   };
 
-  const handleSearchClick = () => {
-    onClose();
-    onSearchClick?.();
+  const isActivePath = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="p-0 w-[320px] sm:w-[380px] flex flex-col">
-        {/* Header */}
-        <SheetHeader className="flex flex-row items-center justify-between p-6 border-b">
-          <SheetTitle className="text-lg font-semibold">Navegação</SheetTitle>
-          <SheetClose asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <X className="h-5 w-5" />
-            </Button>
-          </SheetClose>
-        </SheetHeader>
+    <div className="flex flex-col h-full">
+  
+      <ScrollArea className="flex-1 mt-6">
+        <div className="p-4 space-y-6">
+          {/* User Info (if authenticated) */}
+          {isAuthenticated && user && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <Avatar className="h-10 w-10 border-2 border-background">
+                <AvatarImage src={user.avatarUrl} alt={user.name} />
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  {user.name?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
 
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-6">
-            {/* Search */}
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-3 h-11"
-              onClick={handleSearchClick}
-            >
-              <Search className="h-4 w-4" />
-              <span>Buscar publicações...</span>
-            </Button>
-
-            {/* User Info (if authenticated) */}
-            {authenticated && currentUser && (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <Avatar className="h-10 w-10 border-2 border-background">
-                  <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                    {currentUser.name?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{currentUser.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{currentUser.email}</p>
+          {/* Main Navigation */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
+              Navegação
+            </h3>
+            <nav className="space-y-1">
+              {navigationItems.map((item) => (
+                <div key={item.label}>
+                  {item.items && item.items.length > 0 ? (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "w-full justify-between",
+                            isActivePath(item.href) && "bg-accent"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            {item.icon && <item.icon className="h-4 w-4" />}
+                            <span>{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {item.badge && (
+                              <Badge variant="secondary" className="text-xs">
+                                {item.badge}
+                              </Badge>
+                            )}
+                            <ChevronDown className="h-4 w-4" />
+                          </div>
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                        {item.items.slice(0, 5).map((subItem) => (
+                          <Button
+                            key={subItem.href}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "w-full justify-between",
+                              location.pathname === subItem.href && "bg-accent"
+                            )}
+                            onClick={() => handleNavigation(subItem.href)}
+                          >
+                            <span className="text-sm">{subItem.label}</span>
+                            {subItem.count !== undefined && (
+                              <Badge variant="secondary" className="text-xs">
+                                {subItem.count}
+                              </Badge>
+                            )}
+                          </Button>
+                        ))}
+                        {item.items.length > 5 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-between text-muted-foreground"
+                            onClick={() => handleNavigation(item.href)}
+                          >
+                            <span className="text-sm">Ver todos</span>
+                            <ChevronRight className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-start gap-3",
+                        isActivePath(item.href) && "bg-accent"
+                      )}
+                      onClick={() => handleNavigation(item.href)}
+                    >
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Button>
+                  )}
                 </div>
-                <Badge variant="secondary" className="ml-auto">
-                  Pro
-                </Badge>
-              </div>
-            )}
+              ))}
+            </nav>
+          </div>
 
-            {/* Main Navigation */}
-            <NavigationSection title="Navegação">
-              <div className="space-y-1">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.label}
-                    onClick={() => handleNavigation(item.href)}
-                    icon={item.icon && <item.icon className="h-4 w-4" />}
-                    badge={item.badge}
-                    withChevron={!!item.items}
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            </NavigationSection>
-
-            {/* Quick Actions */}
-            {authenticated && (
-              <NavigationSection title="Ações Rápidas">
-                <div className="space-y-1">
-                  <NavLink
-                    onClick={() => handleNavigation('/create-post')}
-                    icon={<Plus className="h-4 w-4" />}
-                    variant="primary"
-                  >
-                    Nova Publicação
-                  </NavLink>
-                  <NavLink
-                    onClick={() => handleNavigation('/my-posts')}
-                    icon={<BookOpen className="h-4 w-4" />}
-                    badge="3"
-                  >
-                    Minhas Publicações
-                  </NavLink>
-                  <NavLink
-                    onClick={() => handleNavigation('/notifications')}
-                    icon={<Bell className="h-4 w-4" />}
-                    badge="5"
-                  >
-                    Notificações
-                  </NavLink>
-                </div>
-              </NavigationSection>
-            )}
-
-            {/* Account Section */}
-            <NavigationSection title="Conta">
-              <div className="space-y-1">
-                {authenticated ? (
-                  <>
-                    <NavLink
-                      onClick={() => handleNavigation('/profile')}
-                      icon={<User className="h-4 w-4" />}
-                    >
-                      Meu Perfil
-                    </NavLink>
-                    <NavLink
-                      onClick={() => handleNavigation('/settings')}
-                      icon={<Settings className="h-4 w-4" />}
-                    >
-                      Configurações
-                    </NavLink>
-                    <Separator className="my-2" />
-                    <NavLink
-                      onClick={handleLogout}
-                      icon={<LogOut className="h-4 w-4" />}
-                      variant="danger"
-                    >
-                      Sair
-                    </NavLink>
-                  </>
-                ) : (
-                  <>
-                    <NavLink
-                      onClick={() => handleNavigation('/login')}
-                      icon={<LogIn className="h-4 w-4" />}
-                      variant="primary"
-                    >
-                      Entrar
-                    </NavLink>
-                    <NavLink
-                      onClick={() => handleNavigation('/register')}
-                      icon={<User className="h-4 w-4" />}
-                    >
-                      Criar Conta
-                    </NavLink>
-                  </>
-                )}
-              </div>
-            </NavigationSection>
-
-            {/* Categories Preview */}
-            <NavigationSection title="Categorias Populares">
-              <div className="space-y-1">
-                {navItems
-                  .find(item => item.label === 'Categorias')
-                  ?.items?.slice(0, 3)
-                  .map((category: any) => (
-                    <NavLink
-                      key={category.href}
-                      onClick={() => handleNavigation(category.href)}
-                      badge={category.count}
-                    >
-                      {category.label}
-                    </NavLink>
-                  ))
-                }
-                <NavLink
-                  onClick={() => handleNavigation('/categories')}
-                  withChevron
+          {/* Quick Actions (if authenticated) */}
+          {isAuthenticated && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
+                Ações Rápidas
+              </h3>
+              <nav className="space-y-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 bg-primary/10 text-primary hover:bg-primary/20"
+                  onClick={() => handleNavigation('/create-post')}
                 >
-                  Ver todas categorias
-                </NavLink>
-              </div>
-            </NavigationSection>
+                  <Plus className="h-4 w-4" />
+                  <span>Nova Publicação</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-3",
+                    isActivePath('/my-posts') && "bg-accent"
+                  )}
+                  onClick={() => handleNavigation('/my-posts')}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Minhas Publicações</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between",
+                    isActivePath('/notifications') && "bg-accent"
+                  )}
+                  onClick={() => handleNavigation('/notifications')}
+                >
+                  <div className="flex items-center gap-3">
+                    <Bell className="h-4 w-4" />
+                    <span>Notificações</span>
+                  </div>
+                  <Badge variant="destructive" className="text-xs">
+                    3
+                  </Badge>
+                </Button>
+              </nav>
+            </div>
+          )}
 
-            {/* Tags Preview */}
-            <NavigationSection title="Tags Populares">
-              <div className="flex flex-wrap gap-2 px-4 py-2">
-                {navItems
+          {/* Account Section */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
+              Conta
+            </h3>
+            <nav className="space-y-1">
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-3",
+                      isActivePath('/profile') && "bg-accent"
+                    )}
+                    onClick={() => handleNavigation('/profile')}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Meu Perfil</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-3",
+                      isActivePath('/settings') && "bg-accent"
+                    )}
+                    onClick={() => handleNavigation('/settings')}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Configurações</span>
+                  </Button>
+                  <Separator className="my-2" />
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 bg-primary/10 text-primary hover:bg-primary/20"
+                    onClick={() => handleNavigation('/login')}
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Entrar</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3"
+                    onClick={() => handleNavigation('/register')}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Criar Conta</span>
+                  </Button>
+                </>
+              )}
+            </nav>
+          </div>
+
+          {/* Tags Preview */}
+          {navigationItems.find(item => item.label === 'Tags')?.items && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
+                Tags Populares
+              </h3>
+              <div className="flex flex-wrap gap-2 px-2">
+                {navigationItems
                   .find(item => item.label === 'Tags')
                   ?.items?.slice(0, 6)
-                  .map((tag: any) => (
+                  .map((tag) => (
                     <Badge
                       key={tag.href}
                       variant="outline"
-                      className="cursor-pointer hover:bg-accent text-xs px-2 py-1"
-                      onClick={() => {
-                        handleNavigation(tag.href);
-                      }}
+                      className="cursor-pointer hover:bg-accent text-xs"
+                      onClick={() => handleNavigation(tag.href)}
                     >
                       #{tag.label}
                     </Badge>
                   ))
                 }
               </div>
-            </NavigationSection>
-          </div>
-        </ScrollArea>
-
-        {/* Footer */}
-        <div className="p-4 border-t">
-          <div className="text-center text-xs text-muted-foreground space-y-1">
-            <p>© 2024 Sua Plataforma</p>
-            <div className="flex justify-center gap-4">
-              <button className="hover:text-foreground transition-colors">
-                Termos
-              </button>
-              <button className="hover:text-foreground transition-colors">
-                Privacidade
-              </button>
-              <button className="hover:text-foreground transition-colors">
-                Ajuda
-              </button>
             </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Footer */}
+      <div className="border-t p-4">
+        <div className="text-center text-xs text-muted-foreground space-y-2">
+          <div className="flex justify-center gap-4">
+            <button 
+              className="hover:text-foreground transition-colors"
+              onClick={() => handleNavigation('/terms')}
+            >
+              Termos
+            </button>
+            <button 
+              className="hover:text-foreground transition-colors"
+              onClick={() => handleNavigation('/privacy')}
+            >
+              Privacidade
+            </button>
+            <button 
+              className="hover:text-foreground transition-colors"
+              onClick={() => handleNavigation('/help')}
+            >
+              Ajuda
+            </button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 }
