@@ -197,7 +197,7 @@ export function TiptapEditor({
         class: 'prose prose-sm sm:prose lg:prose-lg max-w-none focus:outline-none p-4 min-h-[120px]',
         'data-testid': 'tiptap-editor',
       },
-      handleKeyDown: (view, event) => {
+      handleKeyDown: (_view: any, event: KeyboardEvent) => {
         if (event.key === 'Enter' && !event.shiftKey) {
           event.stopPropagation();
         }
