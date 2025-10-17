@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
@@ -41,39 +42,61 @@ export function ResetPasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-3">
-        {error && (
-          <Alert variant="destructive" role="alert">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {message && (
-          <Alert variant={error ? "destructive" : "default"} role="alert">
-            {error ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive" role="alert" className="border-red-200 bg-red-50 text-red-900">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert 
+          variant={error ? "destructive" : "default"} 
+          role="alert"
+          className={error ? "border-red-200 bg-red-50 text-red-900" : "border-green-200 bg-green-50 text-green-900"}
+        >
+          {error ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
+      <div className="space-y-2">
+        <label htmlFor="newPassword" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Nova Senha
+        </label>
         <Input
+          id="newPassword"
           type="password"
-          placeholder="Nova Senha"
+          placeholder="••••••••"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
+          className="border-border/40 focus:border-foreground transition-colors"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="confirmPassword" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Confirmar Nova Senha
+        </label>
         <Input
+          id="confirmPassword"
           type="password"
-          placeholder="Confirmar Nova Senha"
+          placeholder="••••••••"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          className="border-border/40 focus:border-foreground transition-colors"
         />
-        <Button variant={"destructive"} type="submit" disabled={isLoading}>
-          {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
-        </Button>
       </div>
+
+      <Button 
+        type="submit" 
+        disabled={isLoading}
+        className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+      >
+        {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
+      </Button>
     </form>
   );
 }

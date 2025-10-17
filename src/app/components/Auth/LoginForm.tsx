@@ -19,45 +19,64 @@ export function LoginForm() {
       await login({ email, password });
       navigate('/profile');
     } catch (err) {
-      // Error is handled in the store, just preventing navigation
+      // Error is handled in the store
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-3">
-        {error && (
-          <Alert variant="destructive" role="alert">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive" role="alert" className="border-red-200 bg-red-50 text-red-900">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
+      <div className="space-y-2">
+        <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Email
+        </label>
         <Input
+          id="email"
           type="email"
-          placeholder="Email"
+          placeholder="seu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="border-border/40 focus:border-foreground transition-colors"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="password" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Senha
+        </label>
         <Input
+          id="password"
           type="password"
-          placeholder="Senha"
+          placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="border-border/40 focus:border-foreground transition-colors"
         />
-        <div className="flex justify-end">
-          <Link to="/forgot-password">
-            <p className="text-sm text-gray-500">
-              Esqueceu sua senha?
-            </p>
-          </Link>
-        </div>
-        <Button type="submit" variant="destructive" disabled={isLoading}>
-          {isLoading ? 'Entrando...' : 'Entrar'}
-        </Button>
       </div>
+
+      <div className="flex justify-end">
+        <Link to="/forgot-password" className="group">
+          <p className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Esqueceu sua senha?
+          </p>
+        </Link>
+      </div>
+
+      <Button 
+        type="submit" 
+        disabled={isLoading}
+        className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+      >
+        {isLoading ? 'Entrando...' : 'Entrar'}
+      </Button>
     </form>
   );
 }

@@ -1,6 +1,6 @@
+
 import { useState } from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
-
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -24,32 +24,42 @@ export function ForgotPasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-3">
-        {error && (
-          <Alert variant="destructive" role="alert">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {message && !error && (
-          <Alert variant="default">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive" role="alert" className="border-red-200 bg-red-50 text-red-900">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && !error && (
+        <Alert variant="default" className="border-green-200 bg-green-50 text-green-900">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
+      <div className="space-y-2">
+        <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Email
+        </label>
         <Input
+          id="email"
           type="email"
-          placeholder="Email"
+          placeholder="seu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="border-border/40 focus:border-foreground transition-colors"
         />
-        <Button variant={"destructive"} type="submit" disabled={isLoading}>
-          {isLoading ? 'Enviando...' : 'Redefinir Senha'}
-        </Button>
       </div>
+
+      <Button 
+        type="submit" 
+        disabled={isLoading}
+        className="w-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+      >
+        {isLoading ? 'Enviando...' : 'Redefinir Senha'}
+      </Button>
     </form>
   );
 }
