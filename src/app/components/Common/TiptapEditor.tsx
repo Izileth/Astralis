@@ -136,6 +136,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
             <Tooltip key={item.tooltip}>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   variant={item.isActive ? "secondary" : "ghost"}
                   size="sm"
                   onClick={item.onClick}
@@ -196,6 +197,12 @@ export function TiptapEditor({
         class: 'prose prose-sm sm:prose lg:prose-lg max-w-none focus:outline-none p-4 min-h-[120px]',
         'data-testid': 'tiptap-editor',
       },
+      handleKeyDown: (view, event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.stopPropagation();
+        }
+        return false;
+      },
     },
   });
 
@@ -215,11 +222,12 @@ export function TiptapEditor({
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="space-y-1">
-          <p>Use a barra de ferramentas para formatar seu texto.</p>
+          <p>Use a barra de ferramentas, atalhos de teclado ou markdown para formatar.</p>
           <p>
-            Atalhos: <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">Ctrl+B</kbd> negrito, 
-            <kbd className="px-1 py-0.5 text-xs bg-muted rounded border mx-1">Ctrl+I</kbd> itálico, 
-            <kbd className="px-1 py-0.5 text-xs bg-muted rounded border mx-1">Ctrl+K</kbd> link
+            <span className="font-semibold">Markdown:</span> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">**negrito**</kbd> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">_itálico_</kbd> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">`código`</kbd>
+          </p>
+           <p>
+            <span className="font-semibold">Prefixos de linha:</span> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border"> &gt citação</kbd> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">- lista</kbd> <kbd className="px-1 py-0.5 text-xs bg-muted rounded border"># título</kbd>
           </p>
         </div>
         

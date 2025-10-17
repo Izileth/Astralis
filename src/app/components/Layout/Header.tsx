@@ -278,52 +278,79 @@ export function Header() {
 
             {/* User Menu / Auth Buttons */}
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 px-2 py-1 rounded-md transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                    <Avatar className="h-8 w-8 border border-border/40">
-                      <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name || 'User'} />
-                      <AvatarFallback className="bg-muted text-foreground font-medium text-xs">
-                        {user?.name?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden lg:block max-w-[100px] truncate text-sm font-medium">
-                      {user?.name}
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Meu Perfil</span>
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 px-2 py-1 rounded-md transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                      <Avatar className="h-8 w-8 border border-border/40">
+                        <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name || 'User'} />
+                        <AvatarFallback className="bg-muted text-foreground font-medium text-xs">
+                          {user?.name?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden lg:block max-w-[100px] truncate text-sm font-medium">
+                        {user?.name}
+                      </span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  
+                  <DropdownMenuContent className="w-56" align="end">
+                    {/* User Info Header */}
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    
+                    <DropdownMenuSeparator className="bg-border/40" />
+                    
+                    {/* Menu Items */}
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/profile')} 
+                        className="cursor-pointer focus:bg-transparent hover:bg-transparent group"
+                      >
+                        <div className="flex items-center w-full">
+                          <User className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                          <span className="text-foreground/60 group-hover:text-foreground transition-colors">Meu Perfil</span>
+                        </div>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/my-posts')} 
+                        className="cursor-pointer focus:bg-transparent hover:bg-transparent group"
+                      >
+                        <div className="flex items-center w-full">
+                          <BookOpen className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                          <span className="text-foreground/60 group-hover:text-foreground transition-colors">Minhas Publicações</span>
+                        </div>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/settings')} 
+                        className="cursor-pointer focus:bg-transparent hover:bg-transparent group"
+                      >
+                        <div className="flex items-center w-full">
+                          <Settings className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                          <span className="text-foreground/60 group-hover:text-foreground transition-colors">Configurações</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    
+                    <DropdownMenuSeparator className="bg-border/40" />
+                    
+                    {/* Logout */}
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="cursor-pointer focus:bg-transparent hover:bg-transparent group"
+                    >
+                      <div className="flex items-center w-full">
+                        <LogOut className="mr-2 h-4 w-4 text-red-600 group-hover:text-red-700 transition-colors" />
+                        <span className="text-red-600 group-hover:text-red-700 transition-colors">Sair</span>
+                      </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/my-posts')} className="cursor-pointer">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      <span>Minhas Publicações</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
                 <Button 

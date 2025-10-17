@@ -8,7 +8,7 @@ interface FormattedContentProps {
 
 const FormattedContent: React.FC<FormattedContentProps> = ({ content, className }) => {
   // Sanitize the HTML content to prevent XSS attacks
-  const sanitizedContent = DOMPurify.sanitize(content, {
+  let sanitizedContent = DOMPurify.sanitize(content, {
     USE_PROFILES: { html: true },
     ALLOWED_TAGS: [
       'p', 'strong', 'em', 'u', 's', 'blockquote', 'code', 'pre', 'ul', 'ol', 'li',
@@ -17,14 +17,13 @@ const FormattedContent: React.FC<FormattedContentProps> = ({ content, className 
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
   });
 
+  // Ensure empty paragraphs create a line break for correct spacing from the editor.
+  sanitizedContent = sanitizedContent.replace(/<p><\/p>/g, '<p><br /></p>');
+
   return (
     <div
-      className={`prose prose-lg max-w-none font-sans leading-relaxed text-gray-800 ${className}`}
+      className={`prose prose-lg max-w-none font-sans text-gray-800 leading-[1.7] [word-spacing:0.05em] ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-      style={{
-        fontSize: '18px',
-        lineHeight: '1.7',
-      }}
     />
   );
 };
