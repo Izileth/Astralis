@@ -3,7 +3,8 @@ import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { postService } from '../../services/post';
-import  type{ Category, Tag } from '../../types';
+import type { Category, Tag } from '../../types';
+
 interface SearchSidebarProps {
   onClose?: () => void;
 }
@@ -12,6 +13,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
+import { cn } from '@/app/lib/utils';
 
 export function SearchSidebar({ onClose }: SearchSidebarProps) {
   const navigate = useNavigate();
@@ -82,16 +84,16 @@ export function SearchSidebar({ onClose }: SearchSidebarProps) {
   const hasFilters: boolean = Boolean(searchTerm || selectedCategory || selectedTags.length > 0);
 
   return (
-    <div className="h-full w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
-      <div className="px-6 py-4 border-b border-gray-200">
+    <div className="h-full w-full md:w-80 bg-background border-r border-border/40 flex flex-col">
+      <div className="px-6 py-4 border-b border-border/40">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold  text-red-600 uppercase tracking-wide">Filtros</h3>
+          <h3 className="text-lg font-semibold text-foreground">Filtros</h3>
           {hasFilters && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleReset}
-              className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+              className="hover:bg-transparent hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -100,92 +102,117 @@ export function SearchSidebar({ onClose }: SearchSidebarProps) {
       </div>
 
       <ScrollArea className="flex-grow">
-        <div className="p-6">
-          <div className="mb-6">
-            <label className="block mb-3 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Buscar Notícias</label>
-            <div className="flex items-center gap-2 pt-2">
+        <div className="p-6 space-y-8">
+          {/* Search Input */}
+          <div>
+            <label className="block mb-3 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+              Buscar Notícias
+            </label>
+            <div className="flex items-center gap-2">
               <Input
                 placeholder="Digite palavras-chave..."
                 value={searchTerm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
-                className="flex-1"
+                className="flex-1 border-border/40"
               />
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSearch}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="hover:bg-transparent hover:text-foreground"
               >
                 <Search className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="bg-border/40" />
 
-          <div className="mb-6">
-            <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Editorias</label>
-            <div className='flex flex-col justify-start gap-1 pt-2 items-start'>
+          {/* Categories */}
+          <div>
+            <label className="block mb-3 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+              Editorias
+            </label>
+            <div className="flex flex-col gap-1">
               {categories.length > 0 ? (
                 categories.map((category: Category) => (
-                  <Button
+                  <button
                     key={category.id}
-                    variant={selectedCategory === category.name ? "secondary" : "ghost"}
                     onClick={() => handleCategoryChange(category.name)}
-                    className="w-full justify-start px-4 py-3 text-left transition-all duration-200 font-sans font-medium"
+                    className={cn(
+                      "group relative w-full flex items-center justify-start px-3 py-2.5 text-sm font-medium transition-colors rounded-md text-left",
+                      selectedCategory === category.name
+                        ? "text-foreground"
+                        : "text-foreground/60 hover:text-foreground hover:bg-transparent"
+                    )}
                   >
                     {category.name}
-                  </Button>
+                    <span 
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-[2px] bg-foreground transition-all duration-300",
+                        selectedCategory === category.name ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      )} 
+                    />
+                  </button>
                 ))
               ) : (
-                <p className="text-sm text-gray-500 px-4">Nenhuma editoria disponível</p>
+                <p className="text-sm text-muted-foreground px-3">Nenhuma editoria disponível</p>
               )}
             </div>
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="bg-border/40" />
 
-          <div className="mb-6">
-            <label className="block mb-4 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Assuntos</label>
-            <div className="flex flex-wrap gap-2 pt-2">
+          {/* Tags */}
+          <div>
+            <label className="block mb-3 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+              Assuntos
+            </label>
+            <div className="flex flex-wrap gap-2">
               {tags.length > 0 ? (
                 tags.map((tag: Tag) => (
-                  <Button
+                  <button
                     key={tag.id}
-                    size="sm"
-                    variant={selectedTags.includes(tag.name) ? "destructive" : "outline"}
                     onClick={() => handleTagChange(tag.name)}
-                    className="font-sans text-xs transition-all duration-200"
+                    className={cn(
+                      "inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors border",
+                      selectedTags.includes(tag.name)
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-transparent text-foreground/60 border-border/40 hover:text-foreground hover:border-foreground/20"
+                    )}
                   >
                     #{tag.name}
-                  </Button>
+                  </button>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">Nenhum assunto disponível</p>
+                <p className="text-sm text-muted-foreground">Nenhum assunto disponível</p>
               )}
             </div>
           </div>
 
+          {/* Active Filters */}
           {hasFilters && (
             <>
-              <Separator className="my-6" />
-              <div className="p-4 bg-gray-50 rounded">
-                <p className="block mb-3 text-xs text-gray-500 font-sans uppercase tracking-wider font-bold">Filtros Ativos</p>
-                <div className="flex flex-col gap-1">
+              <Separator className="bg-border/40" />
+              <div className="p-4 bg-muted/30 rounded-lg border border-border/40">
+                <p className="block mb-3 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                  Filtros Ativos
+                </p>
+                <div className="flex flex-col gap-2">
                   {searchTerm && (
-                    <p className="text-xs text-gray-700 font-sans">
-                      Busca: <span className="font-medium">"{searchTerm}"</span>
+                    <p className="text-xs text-foreground/80">
+                      Busca: <span className="font-medium text-foreground">"{searchTerm}"</span>
                     </p>
                   )}
                   {selectedCategory && (
-                    <p className="text-xs text-gray-700 font-sans">
-                      Editoria: <span className="font-medium">{selectedCategory}</span>
+                    <p className="text-xs text-foreground/80">
+                      Editoria: <span className="font-medium text-foreground">{selectedCategory}</span>
                     </p>
                   )}
                   {selectedTags.length > 0 && (
-                    <p className="text-xs text-gray-700 font-sans">
-                      Assuntos: <span className="font-medium">{selectedTags.join(', ')}</span>
+                    <p className="text-xs text-foreground/80">
+                      Assuntos: <span className="font-medium text-foreground">{selectedTags.join(', ')}</span>
                     </p>
                   )}
                 </div>
@@ -195,12 +222,16 @@ export function SearchSidebar({ onClose }: SearchSidebarProps) {
         </div>
       </ScrollArea>
 
-      <div className="p-6 border-t border-gray-200">
+      {/* Footer */}
+      <div className="p-6 border-t border-border/40 bg-muted/30">
         <Button
           variant="outline"
           onClick={handleReset}
           disabled={!hasFilters}
-          className="w-full font-sans font-medium transition-all duration-200"
+          className={cn(
+            "w-full font-medium transition-all duration-200 border-border/40",
+            !hasFilters && "opacity-50 cursor-not-allowed"
+          )}
         >
           Limpar Todos os Filtros
         </Button>

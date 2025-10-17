@@ -1,12 +1,12 @@
-import { Flex, Box } from '@radix-ui/themes';
+
 import { PostList } from '../components/Post/PostList';
 
 export function IndexPage() {
   return (
-    <Flex direction="column" align="center" gap="5" pb="9">
-      <Box width="100%" maxWidth="1200px" px="4">
+    <div className="flex flex-col items-center py-8">
+      <div className="w-full max-w-7xl px-4">
         <PostList />
-      </Box>
-    </Flex>
+      </div>
+    </div>
   );
 }

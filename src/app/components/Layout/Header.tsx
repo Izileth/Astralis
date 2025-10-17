@@ -14,20 +14,22 @@ import {
   TrendingUp,
   Star,
   Plus,
+  ChevronDown,
 } from 'lucide-react';
 
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { 
-  NavigationMenu, 
-  NavigationMenuContent, 
-  NavigationMenuItem, 
-  NavigationMenuLink, 
-  NavigationMenuList, 
-  NavigationMenuTrigger 
-} from '../ui/navigation-menu';
 import { Badge } from '../ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 import { postService } from '../../services/post';
 import type { Category, Tag as TagType } from '../../types';
@@ -37,6 +39,7 @@ import { MobileSidebar } from './MobileSidebar';
 import Logo from '../Common/BrandIcon';
 import { cn } from '@/app/lib/utils';
 import { SearchSidebar } from './SearchSidebar';
+import { Input } from '../ui/input';
 
 export function Header() {
   const navigate = useNavigate();
@@ -47,6 +50,8 @@ export function Header() {
   const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<TagType[]>([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -77,6 +82,15 @@ export function Header() {
     navigate('/login');
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setIsSearchActive(false);
+    }
+  };
+
   const isActivePath = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -84,8 +98,6 @@ export function Header() {
 
   const navigationItems = [
     { label: 'Início', href: '/', icon: Home },
-    { label: 'Categorias', href: '/categories', icon: FolderOpen, items: categories.map((c) => ({ label: c.name, href: `/search?category=${encodeURIComponent(c.name)}`, count: c._count?.posts ?? 0 })) },
-    { label: 'Tags', href: '/tags', icon: Tag, items: tags.map((t) => ({ label: t.name, href: `/search?tags=${encodeURIComponent(t.name)}`, count: t._count?.posts ?? 0 })) },
     { label: 'Autores', href: '/authors', icon: Users },
     { label: 'Populares', href: '/popular', icon: TrendingUp },
     { label: 'Recomendados', href: '/featured', icon: Star }
@@ -93,10 +105,10 @@ export function Header() {
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-200 border-b",
+      "sticky top-0 z-50 w-full transition-all duration-300",
       isScrolled 
-        ? "bg-background/95 backdrop-blur-md border-border/50 shadow-sm" 
-        : "bg-background border-border/30"
+        ? "bg-background/80 backdrop-blur-lg border-b border-border/40" 
+        : "bg-background/50 border-b border-transparent"
     )}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
@@ -105,69 +117,145 @@ export function Header() {
             <Logo href='/' size='lg' variant='minimal'/>
             
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:flex">
-              <NavigationMenuList>
-                {navigationItems.map((item) => (
-                  <NavigationMenuItem key={item.label}>
-                    {item.items ? (
-                      <>
-                        <NavigationMenuTrigger 
-                          className={cn(
-                            "text-sm font-medium transition-colors hover:text-primary data-[active]:text-primary data-[state=open]:text-primary",
-                            isActivePath(item.href) && "text-primary"
-                          )}
+            <nav className="hidden lg:flex items-center gap-1">
+              {navigationItems.map((item) => (
+                <NavLink
+                  key={item.label}
+                  href={item.href}
+                  isActive={isActivePath(item.href)}
+                  onClick={() => navigate(item.href)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+
+              {/* Categories Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn(
+                    "group relative flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors",
+                    "text-foreground/60 hover:text-foreground",
+                    "focus-visible:outline-none"
+                  )}>
+                    Categorias
+                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+                    <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-foreground transition-all duration-300 group-hover:w-full" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="start">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4" />
+                    Categorias
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <DropdownMenuItem
+                          key={category.id}
+                          onClick={() => navigate(`/search?query=${encodeURIComponent(category.name)}`)}
+                          className="cursor-pointer"
                         >
-                          {item.label}
-                        </NavigationMenuTrigger>
-                        <NavigationMenuContent>
-                          <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                            {item.items.map((subItem) => (
-                              <ListItem
-                                key={subItem.href}
-                                title={subItem.label}
-                                href={subItem.href}
-                                count={subItem.count}
-                              />
-                            ))}
+                          <div className="flex items-center justify-between w-full">
+                            <span>{category.name}</span>
+                            {category._count?.posts !== undefined && (
+                              <Badge variant="secondary" className="text-xs ml-2">
+                                {category._count.posts}
+                              </Badge>
+                            )}
                           </div>
-                        </NavigationMenuContent>
-                      </>
+                        </DropdownMenuItem>
+                      ))
                     ) : (
-                      <NavigationMenuLink
-                        href={item.href}
-                        onClick={(e) => { e.preventDefault(); navigate(item.href); }}
-                        className={cn(
-                          "text-sm font-medium transition-colors hover:text-primary px-4 py-2 rounded-md",
-                          isActivePath(item.href) 
-                            ? "text-primary bg-primary/10" 
-                            : "text-foreground/60"
-                        )}
-                      >
-                        {item.label}
-                      </NavigationMenuLink>
+                      <DropdownMenuItem disabled>
+                        Nenhuma categoria disponível
+                      </DropdownMenuItem>
                     )}
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Tags Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn(
+                    "group relative flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors",
+                    "text-foreground/60 hover:text-foreground",
+                    "focus-visible:outline-none"
+                  )}>
+                    Tags
+                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+                    <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-foreground transition-all duration-300 group-hover:w-full" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="start">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Tags
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {tags.length > 0 ? (
+                      tags.map((tag) => (
+                        <DropdownMenuItem
+                          key={tag.id}
+                          onClick={() => navigate(`/search?query=${encodeURIComponent(tag.name)}`)}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>{tag.name}</span>
+                            {tag._count?.posts !== undefined && (
+                              <Badge variant="secondary" className="text-xs ml-2">
+                                {tag._count.posts}
+                              </Badge>
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        Nenhuma tag disponível
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </nav>
           </div>
 
           {/* Right Section */}
           <div className="flex items-center gap-1">
-            {/* Desktop Search Button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate('/search')}
-              className="hidden lg:flex"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+            {/* Desktop Search */}
+            <div className="hidden lg:flex items-center">
+              {isSearchActive ? (
+                <form onSubmit={handleSearchSubmit}>
+                  <Input
+                    placeholder="Pesquisar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                    onBlur={() => {
+                      if (!searchQuery) setIsSearchActive(false);
+                    }}
+                    className="h-9 w-56 border-border/40"
+                  />
+                </form>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSearchActive(true)}
+                  className="hover:bg-transparent hover:text-foreground"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
 
             {/* Mobile Search Button */}
             <Sheet open={isSearchSidebarOpen} onOpenChange={setIsSearchSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden hover:bg-transparent">
                   <Search className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -181,7 +269,7 @@ export function Header() {
               <Button 
                 onClick={() => navigate('/posts/new')}
                 size="sm"
-                className="hidden sm:flex gap-2"
+                className="hidden sm:flex gap-2 bg-foreground text-background hover:bg-foreground/90"
               >
                 <Plus className="h-4 w-4" />
                 <span>Nova Publicação</span>
@@ -190,65 +278,86 @@ export function Header() {
 
             {/* User Menu / Auth Buttons */}
             {isAuthenticated ? (
-               <NavigationMenu className="hidden lg:flex">
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                      <NavigationMenuTrigger className="gap-2">
-                        <Avatar className="h-7 w-7 border-2 border-primary/10">
-                          <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name || 'User'} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
-                            {user?.name?.[0]?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="max-w-[100px] truncate text-sm">{user?.name}</span>
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <ul className="grid w-[300px] gap-2 p-4">
-                          <li className="row-span-3">
-                            <div className="flex flex-col space-y-2 p-4 rounded-lg bg-muted/50">
-                              <p className="text-sm font-medium leading-none">{user?.name}</p>
-                              <p className="text-xs leading-none text-muted-foreground">
-                                {user?.email}
-                              </p>
-                            </div>
-                          </li>
-                          <ListItem title="Meu Perfil" href="/profile" icon={<User className="h-4 w-4" />} />
-                          <ListItem title="Minhas Publicações" href="/my-posts" icon={<BookOpen className="h-4 w-4" />} />
-                          <ListItem title="Configurações" href="/settings" icon={<Settings className="h-4 w-4" />} />
-                          <li>
-                            <NavigationMenuLink asChild>
-                              <button
-                                onClick={handleLogout}
-                                className="flex w-full items-center gap-2 rounded-md p-3 text-sm leading-none transition-colors text-red-600 hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <LogOut className="h-4 w-4" />
-                                <span className="font-medium">Sair</span>
-                              </button>
-                            </NavigationMenuLink>
-                          </li>
-                        </ul>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-2 py-1 rounded-md transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <Avatar className="h-8 w-8 border border-border/40">
+                      <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name || 'User'} />
+                      <AvatarFallback className="bg-muted text-foreground font-medium text-xs">
+                        {user?.name?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden lg:block max-w-[100px] truncate text-sm font-medium">
+                      {user?.name}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Meu Perfil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/my-posts')} className="cursor-pointer">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      <span>Minhas Publicações</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
-                <Button variant="ghost" onClick={() => navigate('/login')} size="sm">Entrar</Button>
-                <Button onClick={() => navigate('/register')} className='bg-zinc-50 text-zinc-900 hover:bg-zinc-200 hover:text-zinc-900'>Registrar</Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/login')} 
+                  size="sm"
+                  className="hover:bg-transparent"
+                >
+                  Entrar
+                </Button>
+                <Button 
+                  onClick={() => navigate('/register')} 
+                  className="bg-foreground text-background hover:bg-foreground/90"
+                  size="sm"
+                >
+                  Registrar
+                </Button>
               </div>
             )}
 
             {/* Mobile Nav Menu */}
             <Sheet open={isNavSidebarOpen} onOpenChange={setIsNavSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden hover:bg-transparent">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[320px] p-0">
                 <MobileSidebar 
-                  navigationItems={navigationItems}
-    
+                  navigationItems={[
+                    ...navigationItems,
+                    { label: 'Categorias', href: '/categories', icon: FolderOpen },
+                    { label: 'Tags', href: '/tags', icon: Tag }
+                  ]}
                 />
               </SheetContent>
             </Sheet>
@@ -259,43 +368,34 @@ export function Header() {
   );
 }
 
-function ListItem({
-  title,
-  href,
-  count,
-  icon,
-}: {
-  title: string;
-  href: string;
-  count?: number;
-  icon?: React.ReactNode;
+// Componente de Link de Navegação com animação de barra
+function NavLink({  
+  isActive, 
+  onClick, 
+  children 
+}: { 
+  href: string; 
+  isActive: boolean; 
+  onClick: () => void; 
+  children: React.ReactNode;
 }) {
-  const navigate = useNavigate();
-
   return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          href={href}
-          onClick={(e) => {
-            e.preventDefault();
-            navigate(href);
-          }}
-          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground group"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {icon && <span className="text-muted-foreground group-hover:text-accent-foreground flex-shrink-0">{icon}</span>}
-              <div className="text-sm font-medium leading-none truncate">{title}</div>
-            </div>
-            {count !== undefined && (
-              <Badge variant="secondary" className="text-xs flex-shrink-0">
-                {count}
-              </Badge>
-            )}
-          </div>
-        </a>
-      </NavigationMenuLink>
-    </li>
+    <button
+      onClick={onClick}
+      className={cn(
+        "group relative px-3 py-2 text-sm font-medium transition-colors",
+        isActive 
+          ? "text-foreground" 
+          : "text-foreground/60 hover:text-foreground"
+      )}
+    >
+      {children}
+      <span 
+        className={cn(
+          "absolute bottom-0 left-0 h-[2px] bg-foreground transition-all duration-300",
+          isActive ? "w-full" : "w-0 group-hover:w-full"
+        )} 
+      />
+    </button>
   );
 }

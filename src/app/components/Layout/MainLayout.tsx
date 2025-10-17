@@ -7,14 +7,14 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [isMobileSearchSidebarOpen, setIsMobileSearchSidebarOpen] = useState(false);
-  const [isDesktopSearchSidebarOpen, setIsDesktopSearchSidebarOpen] = useState(false);
+  const [isMobileSearchSidebarOpen] = useState(false);
+  const [isDesktopSearchSidebarOpen] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header 
-        onSearchIconClick={() => setIsMobileSearchSidebarOpen(!isMobileSearchSidebarOpen)}
-        onDesktopSearchIconClick={() => setIsDesktopSearchSidebarOpen(!isDesktopSearchSidebarOpen)}
+
+      
       />
       <div className="flex flex-grow">
         <div className="flex-grow">
